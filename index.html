@@ -63,6 +63,21 @@
   .dash-tile .ic{ font-size:26px; margin-bottom:8px; }
   .dash-tile .lb{ font-size:13px; font-weight:600; }
   .placeholder{ text-align:center; color:var(--dim); padding:60px 20px; font-size:13.5px; }
+  .cat-tab{
+    padding:8px 16px; border-radius:20px; border:1px solid var(--line);
+    background:var(--card); color:var(--dim); font-size:13px; font-weight:600;
+    white-space:nowrap; cursor:pointer;
+  }
+  .cat-tab.active{ background:var(--gold); color:#2E1D0C; border-color:var(--gold); }
+  .remedy-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 16px; margin-bottom:10px; border-radius:12px; border:1px solid var(--line);
+    background:var(--card);
+  }
+  .remedy-row .info .name{ font-weight:700; font-size:14px; }
+  .remedy-row .info .price{ font-size:12px; color:var(--dim); margin-top:2px; }
+  .remedy-row .actions{ display:flex; gap:8px; }
+  .remedy-row .actions span{ cursor:pointer; font-size:15px; }
 </style>
 </head>
 <body>
@@ -98,12 +113,56 @@
     <span class="title">User App Control</span>
   </div>
   <div class="dash-grid">
-    <div class="dash-tile"><div class="ic">🙏</div><div class="lb">Remedies List</div></div>
+    <div class="dash-tile" onclick="openRemedies()"><div class="ic">🙏</div><div class="lb">Remedies List</div></div>
     <div class="dash-tile"><div class="ic">💬</div><div class="lb">Help Chats</div></div>
     <div class="dash-tile"><div class="ic">🔴</div><div class="lb">Live Sessions</div></div>
     <div class="dash-tile"><div class="ic">💳</div><div class="lb">Payments / Refunds</div></div>
   </div>
-  <div class="placeholder">In-progress — hum ek-ek karke inhe banayenge.</div>
+  <div class="placeholder">Help Chats, Live Sessions, Payments/Refunds — in-progress.</div>
+</div>
+
+<!-- REMEDIES LIST SCREEN -->
+<div class="dash" id="dash-remedies">
+  <div class="dash-header">
+    <span class="back" onclick="showDash('dash-user')">←</span>
+    <span class="title" style="flex:1;">Remedies List</span>
+    <span id="add-remedy-btn" style="width:34px; height:34px; border-radius:50%; background:var(--gold); color:#2E1D0C; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; cursor:pointer;">+</span>
+  </div>
+  <div class="uk-tabs" id="remedy-cat-tabs" style="display:flex; gap:8px; padding:14px 20px 10px; overflow-x:auto;">
+    <button class="cat-tab active" data-cat="pooja">Pooja</button>
+    <button class="cat-tab" data-cat="spell">Spell</button>
+    <button class="cat-tab" data-cat="gemstone">Gemstone</button>
+    <button class="cat-tab" data-cat="rudraksh">Rudraksh</button>
+  </div>
+  <div id="remedies-list" style="padding:0 20px;"></div>
+</div>
+
+<!-- ADD/EDIT REMEDY FORM (overlay) -->
+<div id="remedy-form-overlay" style="display:none; position:fixed; inset:0; background:rgba(4,2,1,0.9); z-index:50; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:var(--bg); border:1px solid var(--line); border-radius:16px; padding:24px; max-width:400px; width:100%; max-height:85vh; overflow-y:auto;">
+    <h2 id="remedy-form-title" style="color:var(--gold-hi); font-size:17px; margin:0 0 16px;">Add Remedy</h2>
+    <label style="font-size:12px; color:var(--dim); display:block; margin-bottom:4px;">Category</label>
+    <select id="rf-cat" style="width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,0.05); color:var(--ink);">
+      <option value="pooja">Pooja</option>
+      <option value="spell">Spell</option>
+      <option value="gemstone">Gemstone</option>
+      <option value="rudraksh">Rudraksh</option>
+    </select>
+    <label style="font-size:12px; color:var(--dim); display:block; margin-bottom:4px;">Photo (16:9)</label>
+    <input id="rf-photo" type="file" accept="image/*" style="width:100%; margin-bottom:8px; color:var(--ink); font-size:13px;">
+    <div id="rf-photo-preview" style="width:100%; aspect-ratio:16/9; border-radius:10px; border:1px dashed var(--line); margin-bottom:12px; background:var(--card); display:flex; align-items:center; justify-content:center; color:var(--dim); font-size:12px; overflow:hidden;">No photo selected</div>
+    <label style="font-size:12px; color:var(--dim); display:block; margin-bottom:4px;">Name</label>
+    <input id="rf-name" type="text" placeholder="e.g. Griha Shanti Pooja" style="width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,0.05); color:var(--ink);">
+    <label style="font-size:12px; color:var(--dim); display:block; margin-bottom:4px;">Description</label>
+    <textarea id="rf-desc" rows="4" placeholder="Full description of this remedy" style="width:100%; padding:12px; margin-bottom:12px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,0.05); color:var(--ink); font-family:inherit; resize:vertical;"></textarea>
+    <label style="font-size:12px; color:var(--dim); display:block; margin-bottom:4px;">Price</label>
+    <input id="rf-price" type="text" placeholder="e.g. From ₹1,100" style="width:100%; padding:12px; margin-bottom:18px; border-radius:10px; border:1px solid var(--line); background:rgba(255,255,255,0.05); color:var(--ink);">
+    <div id="rf-error" style="color:#E08AA8; font-size:12px; margin-bottom:10px;"></div>
+    <div style="display:flex; gap:10px;">
+      <button onclick="closeRemedyForm()" style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer;">Cancel</button>
+      <button onclick="saveRemedy()" style="flex:1; padding:12px; border-radius:10px; border:none; background:var(--gold); color:#2E1D0C; font-weight:700; cursor:pointer;">Save</button>
+    </div>
+  </div>
 </div>
 
 <!-- ASTROLOGER APP CONTROL DASHBOARD -->
@@ -126,7 +185,9 @@
   import {
     getAuth, signInWithEmailAndPassword, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import {
+    getFirestore, collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDubjcSirXbe4EJSFggYDveb4gVKUEElR0",
@@ -179,6 +240,195 @@
     landing.style.display = 'none';
     document.querySelectorAll('.dash').forEach(d => d.style.display = 'none');
     document.getElementById(id).style.display = 'block';
+  };
+
+  // ---- Remedies List management ----
+  let currentRemedyCat = 'pooja';
+  let remedyUnsub = null;
+  let editingRemedyId = null;
+
+  window.openRemedies = function() {
+    showDash('dash-remedies');
+    loadRemedies(currentRemedyCat);
+  };
+
+  document.querySelectorAll('.cat-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+      tab.classList.add('active');
+      currentRemedyCat = tab.dataset.cat;
+      loadRemedies(currentRemedyCat);
+    });
+  });
+
+  function loadRemedies(cat) {
+    const listEl = document.getElementById('remedies-list');
+    listEl.innerHTML = '<div class="placeholder">Loading...</div>';
+    if (remedyUnsub) remedyUnsub();
+    const q = query(collection(db, 'remedies'), where('cat', '==', cat));
+    remedyUnsub = onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        listEl.innerHTML = '<div class="placeholder">No remedies in this category yet.</div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      snap.forEach(d => {
+        const r = d.data();
+        const row = document.createElement('div');
+        row.className = 'remedy-row';
+        row.innerHTML = `
+          ${r.photo ? `<img src="${r.photo}" style="width:56px; height:32px; object-fit:cover; border-radius:6px; margin-right:10px; flex-shrink:0;">` : '<div style="width:56px; height:32px; border-radius:6px; margin-right:10px; flex-shrink:0; background:var(--card); border:1px dashed var(--line);"></div>'}
+          <div class="info" style="flex:1;">
+            <div class="name">${r.name || ''}</div>
+            <div class="price">${r.price || ''}</div>
+          </div>
+          <div class="actions">
+            <span onclick="editRemedy('${d.id}')">✏️</span>
+            <span onclick="deleteRemedy('${d.id}')">🗑️</span>
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+    });
+  }
+
+  window.currentRemedyDocs = {}; // cache for edit lookups
+  // Keep a live cache alongside rendering so editRemedy can read current field values
+  function cacheRemedies(cat) {
+    const q = query(collection(db, 'remedies'), where('cat', '==', cat));
+    onSnapshot(q, (snap) => {
+      snap.forEach(d => { window.currentRemedyDocs[d.id] = d.data(); });
+    });
+  }
+  cacheRemedies('pooja'); cacheRemedies('spell'); cacheRemedies('gemstone'); cacheRemedies('rudraksh');
+
+  // ---- One-time import of the remedies already listed in the user app ----
+  const REMEDY_SEED = [
+    { cat:"pooja", name:"Griha Shanti Pooja", desc:"To bring peace and remove negativity at home", price:"From ₹1,100" },
+    { cat:"pooja", name:"Navgraha Shanti", desc:"A ritual to pacify the nine planets", price:"From ₹2,100" },
+    { cat:"pooja", name:"Rudrabhishek Homa", desc:"A ritual homa for Lord Shiva's blessings", price:"From ₹2,500" },
+    { cat:"pooja", name:"Griha Pravesh Pooja", desc:"Rituals for an auspicious entry into a new home", price:"From ₹1,800" },
+    { cat:"spell", name:"Career Blockage Spell", desc:"For progress in a stalled job or business", price:"From ₹999" },
+    { cat:"spell", name:"Marriage Obstacle Removal", desc:"To clear obstacles blocking marriage", price:"From ₹1,500" },
+    { cat:"spell", name:"Enemy Protection Spell", desc:"Protection from enemies and negative people", price:"From ₹1,200" },
+    { cat:"gemstone", name:"Ruby (Manik)", desc:"For the Sun — confidence and leadership", price:"From ₹2,500" },
+    { cat:"gemstone", name:"Blue Sapphire (Neelam)", desc:"For Saturn — stability in career", price:"From ₹3,500" },
+    { cat:"gemstone", name:"Emerald (Panna)", desc:"For Mercury — intellect and communication", price:"From ₹2,200" },
+    { cat:"gemstone", name:"Pearl (Moti)", desc:"For the Moon — peace of mind", price:"From ₹1,500" },
+    { cat:"rudraksh", name:"1 Mukhi Rudraksh", desc:"For spiritual awareness and Shiva's grace", price:"From ₹5,100" },
+    { cat:"rudraksh", name:"5 Mukhi Rudraksh", desc:"For health and everyday peace of life", price:"From ₹350" },
+    { cat:"rudraksh", name:"7 Mukhi Rudraksh", desc:"For wealth and business growth", price:"From ₹950" },
+    { cat:"rudraksh", name:"11 Mukhi Rudraksh", desc:"For protection and decision-making power", price:"From ₹1,800" },
+  ];
+
+  (async function importSeedRemediesIfEmpty() {
+    const snap = await new Promise(resolve => {
+      const unsub = onSnapshot(collection(db, 'remedies'), s => { unsub(); resolve(s); });
+    });
+    if (!snap.empty) return; // already has data, don't re-seed
+    for (const item of REMEDY_SEED) {
+      await addDoc(collection(db, 'remedies'), { ...item, photo: null, updatedAt: serverTimestamp() });
+    }
+  })();
+
+  // ---- Photo handling: resize/compress to 16:9 before saving ----
+  let pendingPhotoBase64 = null;
+
+  document.getElementById('rf-photo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const targetW = 480, targetH = 270; // 16:9
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW; canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        // cover-fit crop
+        const srcRatio = img.width / img.height;
+        const targetRatio = targetW / targetH;
+        let sx, sy, sw, sh;
+        if (srcRatio > targetRatio) {
+          sh = img.height; sw = sh * targetRatio;
+          sx = (img.width - sw) / 2; sy = 0;
+        } else {
+          sw = img.width; sh = sw / targetRatio;
+          sx = 0; sy = (img.height - sh) / 2;
+        }
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+        pendingPhotoBase64 = canvas.toDataURL('image/jpeg', 0.75);
+        document.getElementById('rf-photo-preview').innerHTML = `<img src="${pendingPhotoBase64}" style="width:100%; height:100%; object-fit:cover;">`;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('add-remedy-btn').addEventListener('click', () => {
+    editingRemedyId = null;
+    pendingPhotoBase64 = null;
+    document.getElementById('remedy-form-title').textContent = 'Add Remedy';
+    document.getElementById('rf-cat').value = currentRemedyCat;
+    document.getElementById('rf-name').value = '';
+    document.getElementById('rf-desc').value = '';
+    document.getElementById('rf-price').value = '';
+    document.getElementById('rf-photo').value = '';
+    document.getElementById('rf-photo-preview').innerHTML = 'No photo selected';
+    document.getElementById('rf-error').textContent = '';
+    document.getElementById('remedy-form-overlay').style.display = 'flex';
+  });
+
+  window.editRemedy = function(id) {
+    const r = window.currentRemedyDocs[id];
+    if (!r) return;
+    editingRemedyId = id;
+    pendingPhotoBase64 = r.photo || null;
+    document.getElementById('remedy-form-title').textContent = 'Edit Remedy';
+    document.getElementById('rf-cat').value = r.cat || 'pooja';
+    document.getElementById('rf-name').value = r.name || '';
+    document.getElementById('rf-desc').value = r.desc || '';
+    document.getElementById('rf-price').value = r.price || '';
+    document.getElementById('rf-photo').value = '';
+    document.getElementById('rf-photo-preview').innerHTML = r.photo ? `<img src="${r.photo}" style="width:100%; height:100%; object-fit:cover;">` : 'No photo selected';
+    document.getElementById('rf-error').textContent = '';
+    document.getElementById('remedy-form-overlay').style.display = 'flex';
+  };
+
+  window.deleteRemedy = async function(id) {
+    if (!confirm('Delete this remedy?')) return;
+    await deleteDoc(doc(db, 'remedies', id));
+  };
+
+  window.closeRemedyForm = function() {
+    document.getElementById('remedy-form-overlay').style.display = 'none';
+  };
+
+  window.saveRemedy = async function() {
+    const cat = document.getElementById('rf-cat').value;
+    const name = document.getElementById('rf-name').value.trim();
+    const desc = document.getElementById('rf-desc').value.trim();
+    const price = document.getElementById('rf-price').value.trim();
+    if (!name || !desc || !price) {
+      document.getElementById('rf-error').textContent = 'Name, description and price are all required.';
+      return;
+    }
+    if (!pendingPhotoBase64) {
+      document.getElementById('rf-error').textContent = 'A 16:9 photo is required.';
+      return;
+    }
+    const data = { cat, name, desc, price, photo: pendingPhotoBase64, updatedAt: serverTimestamp() };
+    try {
+      if (editingRemedyId) {
+        await updateDoc(doc(db, 'remedies', editingRemedyId), data);
+      } else {
+        await addDoc(collection(db, 'remedies'), data);
+      }
+      closeRemedyForm();
+      loadRemedies(currentRemedyCat);
+    } catch (e) {
+      document.getElementById('rf-error').textContent = 'Error: ' + e.message;
+    }
   };
 </script>
 
