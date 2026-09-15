@@ -226,7 +226,7 @@
     getAuth, signInWithEmailAndPassword, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
-    getFirestore, collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp
+    getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -332,6 +332,8 @@
     document.getElementById('topbar-title').textContent = link ? link.label : '';
 
     if (sectionId === 'remedies') { renderRemediesSection(); return; }
+    if (sectionId === 'tickets') { renderTicketsSection('astrologer'); return; }
+    if (sectionId === 'helpchats') { renderTicketsSection('user'); return; }
 
     document.getElementById('content').innerHTML = `<div class="empty-state">This section is coming soon.</div>`;
   };
@@ -531,6 +533,116 @@
     } catch (e) {
       document.getElementById('rf-error').textContent = 'Error: ' + e.message;
     }
+  };
+
+  // ================= SUPPORT TICKETS =================
+  let ticketListUnsub = null;
+  let ticketChatUnsub = null;
+
+  window.renderTicketsSection = function(role) {
+    window.currentTicketRole = role;
+    document.getElementById('content').innerHTML = `
+      <div class="toolbar">
+        <div class="cat-tabs" id="ticket-status-tabs">
+          <button class="cat-tab active" data-status="open">Open</button>
+          <button class="cat-tab" data-status="closed">Closed</button>
+        </div>
+      </div>
+      <div id="tickets-list"></div>
+    `;
+    document.querySelectorAll('#ticket-status-tabs .cat-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('#ticket-status-tabs .cat-tab').forEach(b => b.classList.remove('active'));
+        tab.classList.add('active');
+        loadTicketsList(role, tab.dataset.status);
+      });
+    });
+    loadTicketsList(role, 'open');
+  };
+
+  function loadTicketsList(role, status) {
+    const listEl = document.getElementById('tickets-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="empty-state">Loading...</div>';
+    if (ticketListUnsub) ticketListUnsub();
+    const q = query(collection(db, 'supportTickets'), where('role', '==', role), where('status', '==', status));
+    ticketListUnsub = onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        listEl.innerHTML = `<div class="empty-state">No ${status} tickets.</div>`;
+        return;
+      }
+      const rows = [];
+      snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+      rows.sort((a, b) => (b.ticketNumber || 0) - (a.ticketNumber || 0));
+      listEl.innerHTML = rows.map(t => `
+        <div class="remedy-row" style="cursor:pointer; display:block;" onclick="openTicketAdminChat('${t.id}', ${t.ticketNumber}, '${(t.raisedByName||'').replace(/'/g,"\\'")}')">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="font-weight:700; font-size:13.5px;">#${t.ticketNumber} — ${t.raisedByName || 'Unknown'}</span>
+          </div>
+          <div style="font-size:12px; color:var(--dim); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.lastMessage || 'No messages yet'}</div>
+        </div>
+      `).join('');
+    });
+  }
+
+  window.openTicketAdminChat = function(ticketId, ticketNumber, raisedByName) {
+    window.currentAdminTicketId = ticketId;
+    document.getElementById('content').innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <span style="cursor:pointer; font-size:18px; color:var(--brass-hi);" onclick="renderTicketsSection(window.currentTicketRole)">←</span>
+        <div>
+          <div style="font-weight:700; font-size:15px;">Ticket #${ticketNumber}</div>
+          <div style="font-size:11.5px; color:var(--dim);">${raisedByName}</div>
+        </div>
+        <button style="margin-left:auto; padding:7px 14px; border-radius:8px; border:1px solid var(--rose); background:transparent; color:var(--rose); font-size:12px; cursor:pointer;" onclick="closeAdminTicket()">Close Ticket</button>
+      </div>
+      <div id="admin-ticket-body" style="display:flex; flex-direction:column; gap:8px; max-width:520px;"></div>
+      <div style="display:flex; gap:8px; margin-top:16px; max-width:520px;">
+        <input id="admin-ticket-input" type="text" placeholder="Type a reply..." style="flex:1; padding:11px 14px; border-radius:20px; border:1px solid var(--line); background:rgba(255,255,255,0.03); color:var(--parchment); font-size:14px;">
+        <button id="admin-ticket-send" style="width:42px; height:42px; border-radius:50%; border:none; background:var(--brass); color:#1A1305; font-size:16px; cursor:pointer;">➤</button>
+      </div>
+    `;
+    if (ticketChatUnsub) ticketChatUnsub();
+    const q = query(collection(db, 'supportTickets', ticketId, 'messages'), orderBy('sentAt', 'asc'));
+    ticketChatUnsub = onSnapshot(q, (snap) => {
+      const body = document.getElementById('admin-ticket-body');
+      if (!body) return;
+      if (snap.empty) { body.innerHTML = '<div class="empty-state">No messages yet.</div>'; return; }
+      body.innerHTML = '';
+      snap.forEach(d => {
+        const m = d.data();
+        const mine = m.senderType === 'admin';
+        const row = document.createElement('div');
+        row.style.cssText = `align-self:${mine ? 'flex-end' : 'flex-start'}; max-width:75%; padding:10px 14px; border-radius:12px; font-size:13.5px; background:${mine ? 'var(--brass)' : 'var(--card)'}; color:${mine ? '#1A1305' : 'var(--parchment)'}; border:1px solid var(--line);`;
+        row.textContent = m.text || '';
+        body.appendChild(row);
+      });
+      body.scrollTop = body.scrollHeight;
+    });
+    document.getElementById('admin-ticket-send').addEventListener('click', sendAdminTicketMsg);
+    document.getElementById('admin-ticket-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendAdminTicketMsg(); });
+  };
+
+  async function sendAdminTicketMsg() {
+    const input = document.getElementById('admin-ticket-input');
+    const text = input.value.trim();
+    if (!text || !window.currentAdminTicketId) return;
+    input.value = '';
+    await addDoc(collection(db, 'supportTickets', window.currentAdminTicketId, 'messages'), {
+      text, senderType: 'admin', sentAt: serverTimestamp()
+    });
+    await updateDoc(doc(db, 'supportTickets', window.currentAdminTicketId), {
+      lastMessage: text, lastMessageAt: serverTimestamp()
+    });
+  }
+
+  window.closeAdminTicket = async function() {
+    if (!window.currentAdminTicketId) return;
+    if (!confirm('Mark this ticket as closed?')) return;
+    await updateDoc(doc(db, 'supportTickets', window.currentAdminTicketId), { status: 'closed' });
+    await addDoc(collection(db, 'supportTickets', window.currentAdminTicketId, 'messages'), {
+      text: 'This ticket has been closed by admin.', senderType: 'system', sentAt: serverTimestamp()
+    });
   };
 </script>
 
