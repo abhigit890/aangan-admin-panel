@@ -136,6 +136,10 @@
     display:none; position:fixed; inset:0; background:rgba(8,6,3,0.85); z-index:50;
     align-items:center; justify-content:center; padding:20px;
   }
+  #astro-form-overlay{
+    display:none; position:fixed; inset:0; background:rgba(8,6,3,0.85); z-index:50;
+    align-items:center; justify-content:center; padding:20px;
+  }
   #remedy-form-overlay .modal{
     background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:26px;
     max-width:420px; width:100%; max-height:88vh; overflow-y:auto;
@@ -156,6 +160,24 @@
   .modal-actions button{ flex:1; padding:11px; border-radius:8px; font-size:14px; cursor:pointer; }
   .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--parchment); }
   .btn-solid{ background:var(--brass); border:none; color:#1A1305; font-weight:700; }
+  .astro-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:14px; }
+  .astro-card{
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--panel); padding:16px;
+    text-align:center;
+  }
+  .astro-card .aphoto{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; border:2px solid var(--brass); }
+  .astro-card .aphoto-empty{
+    width:72px; height:72px; border-radius:50%; margin:0 auto 10px; background:rgba(200,155,74,0.12);
+    display:flex; align-items:center; justify-content:center; font-size:26px; color:var(--dim);
+  }
+  .astro-card .aname{ font-size:14px; font-weight:700; }
+  .astro-card .aspec{ font-size:11.5px; color:var(--dim); margin-top:2px; }
+  .astro-card .arow2{ display:flex; justify-content:space-between; margin-top:12px; }
+  .astro-card .arow2 span{ cursor:pointer; font-size:13px; color:var(--dim); }
+  .credentials-box{
+    background:rgba(62,158,92,0.1); border:1px solid var(--teal); border-radius:10px; padding:14px; margin-top:14px; font-size:13px;
+  }
+  .credentials-box b{ color:var(--brass-hi); }
 </style>
 </head>
 <body>
@@ -220,13 +242,56 @@
   </div>
 </div>
 
+<!-- HIRE / EDIT ASTROLOGER MODAL -->
+<div id="astro-form-overlay">
+  <div class="modal">
+    <h2 id="astro-form-title">Hire an Astrologer</h2>
+
+    <label>Profile Photo</label>
+    <input id="af-photo" type="file" accept="image/*">
+    <div id="af-photo-preview" style="width:96px; height:96px; border-radius:50%; border:1px dashed var(--line); margin:0 auto 14px; display:flex; align-items:center; justify-content:center; color:var(--dim); font-size:11px; overflow:hidden; background:rgba(255,255,255,0.02);">No photo</div>
+
+    <label>Full Name</label>
+    <input type="text" id="af-name" placeholder="e.g. Guru Meera Devi">
+
+    <label>Login Email <span style="color:var(--dim); font-weight:400;">(used to sign in to the astrologer app)</span></label>
+    <input type="text" id="af-email" placeholder="astrologer@aangan.com">
+
+    <label id="af-password-label">Login Password</label>
+    <input type="text" id="af-password" placeholder="Set a password (min 6 characters)">
+
+    <label>Specialty</label>
+    <input type="text" id="af-specialty" placeholder="e.g. Vedic, Tarot, Numerology">
+
+    <label>Languages</label>
+    <input type="text" id="af-languages" placeholder="e.g. Hindi, English">
+
+    <label>Price (₹ per minute)</label>
+    <input type="text" id="af-price" placeholder="e.g. 25">
+
+    <label>Experience (years)</label>
+    <input type="text" id="af-experience" placeholder="e.g. 8">
+
+    <label>About</label>
+    <textarea id="af-about" rows="4" placeholder="A short bio for this astrologer's profile"></textarea>
+
+    <div id="af-error"></div>
+    <div id="af-credentials" class="credentials-box" style="display:none;"></div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAstroForm()">Cancel</button>
+      <button class="btn-solid" id="af-save-btn" onclick="saveAstrologer()">Hire Astrologer</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
-    getAuth, signInWithEmailAndPassword, onAuthStateChanged
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged, createUserWithEmailAndPassword, signOut
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
-    getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp
+    getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -242,6 +307,11 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   window.db = db;
+
+  // Secondary Firebase app instance — used only to create new astrologer
+  // login accounts, so it doesn't sign the admin out of their own session.
+  const secondaryApp = initializeApp(firebaseConfig, "AstrologerCreator");
+  const secondaryAuth = getAuth(secondaryApp);
 
   const loginScreen = document.getElementById('login-screen');
   const shell = document.getElementById('shell');
@@ -334,6 +404,7 @@
     if (sectionId === 'remedies') { renderRemediesSection(); return; }
     if (sectionId === 'tickets') { renderTicketsSection('astrologer'); return; }
     if (sectionId === 'helpchats') { renderTicketsSection('user'); return; }
+    if (sectionId === 'astrologers') { renderAstrologersSection(); return; }
 
     document.getElementById('content').innerHTML = `<div class="empty-state">This section is coming soon.</div>`;
   };
@@ -643,6 +714,188 @@
     await addDoc(collection(db, 'supportTickets', window.currentAdminTicketId, 'messages'), {
       text: 'This ticket has been closed by admin.', senderType: 'system', sentAt: serverTimestamp()
     });
+  };
+
+  // ================= ASTROLOGERS (HIRE / MANAGE) =================
+  let astroListUnsub = null;
+  let editingAstroUid = null;
+  let pendingAstroPhoto = null;
+  window.currentAstroDocs = {};
+
+  function renderAstrologersSection() {
+    document.getElementById('content').innerHTML = `
+      <div class="toolbar">
+        <div></div>
+        <div class="add-btn" id="hire-astro-btn">+</div>
+      </div>
+      <div class="astro-grid" id="astro-grid"></div>
+    `;
+    document.getElementById('hire-astro-btn').addEventListener('click', openHireForm);
+    loadAstrologers();
+  }
+
+  function loadAstrologers() {
+    const grid = document.getElementById('astro-grid');
+    grid.innerHTML = '<div class="empty-state">Loading...</div>';
+    if (astroListUnsub) astroListUnsub();
+    astroListUnsub = onSnapshot(collection(db, 'astrologers'), (snap) => {
+      if (snap.empty) {
+        grid.innerHTML = '<div class="empty-state">No astrologers hired yet.</div>';
+        return;
+      }
+      grid.innerHTML = '';
+      snap.forEach(d => {
+        const a = d.data();
+        window.currentAstroDocs[d.id] = a;
+        if (!a.name && !a.specialty) return; // skip bare test/chat-only accounts with no profile set up
+        const card = document.createElement('div');
+        card.className = 'astro-card';
+        card.innerHTML = `
+          ${a.profilePhoto ? `<img class="aphoto" src="${a.profilePhoto}">` : `<div class="aphoto-empty">🧑‍🔮</div>`}
+          <div class="aname">${a.name || 'Unnamed'}</div>
+          <div class="aspec">${a.specialty || ''}</div>
+          <div class="arow2">
+            <span onclick="editAstrologer('${d.id}')">Edit</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      if (!grid.innerHTML) grid.innerHTML = '<div class="empty-state">No astrologers hired yet.</div>';
+    });
+  }
+
+  function openHireForm() {
+    editingAstroUid = null;
+    pendingAstroPhoto = null;
+    document.getElementById('astro-form-title').textContent = 'Hire an Astrologer';
+    document.getElementById('af-photo').value = '';
+    document.getElementById('af-photo-preview').innerHTML = 'No photo';
+    document.getElementById('af-name').value = '';
+    document.getElementById('af-email').value = '';
+    document.getElementById('af-email').disabled = false;
+    document.getElementById('af-password').value = '';
+    document.getElementById('af-password').style.display = 'block';
+    document.getElementById('af-password-label').style.display = 'block';
+    document.getElementById('af-specialty').value = '';
+    document.getElementById('af-languages').value = '';
+    document.getElementById('af-price').value = '';
+    document.getElementById('af-experience').value = '';
+    document.getElementById('af-about').value = '';
+    document.getElementById('af-error').textContent = '';
+    document.getElementById('af-credentials').style.display = 'none';
+    document.getElementById('af-save-btn').textContent = 'Hire Astrologer';
+    document.getElementById('af-save-btn').style.display = 'block';
+    document.getElementById('astro-form-overlay').style.display = 'flex';
+  }
+
+  window.editAstrologer = function(uid) {
+    const a = window.currentAstroDocs[uid];
+    if (!a) return;
+    editingAstroUid = uid;
+    pendingAstroPhoto = a.profilePhoto || null;
+    document.getElementById('astro-form-title').textContent = 'Edit Astrologer';
+    document.getElementById('af-photo').value = '';
+    document.getElementById('af-photo-preview').innerHTML = a.profilePhoto ? `<img src="${a.profilePhoto}" style="width:100%; height:100%; object-fit:cover;">` : 'No photo';
+    document.getElementById('af-name').value = a.name || '';
+    document.getElementById('af-email').value = a.email || '';
+    document.getElementById('af-email').disabled = true; // login email can't be changed here
+    document.getElementById('af-password').style.display = 'none';
+    document.getElementById('af-password-label').style.display = 'none';
+    document.getElementById('af-specialty').value = a.specialty || '';
+    document.getElementById('af-languages').value = a.languages || '';
+    document.getElementById('af-price').value = a.price || '';
+    document.getElementById('af-experience').value = a.experienceYears || '';
+    document.getElementById('af-about').value = a.about || '';
+    document.getElementById('af-error').textContent = '';
+    document.getElementById('af-credentials').style.display = 'none';
+    document.getElementById('af-save-btn').textContent = 'Save Changes';
+    document.getElementById('af-save-btn').style.display = 'block';
+    document.getElementById('astro-form-overlay').style.display = 'flex';
+  };
+
+  window.closeAstroForm = function() {
+    document.getElementById('astro-form-overlay').style.display = 'none';
+  };
+
+  document.getElementById('af-photo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 300;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+        pendingAstroPhoto = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('af-photo-preview').innerHTML = `<img src="${pendingAstroPhoto}" style="width:100%; height:100%; object-fit:cover;">`;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  window.saveAstrologer = async function() {
+    const name = document.getElementById('af-name').value.trim();
+    const email = document.getElementById('af-email').value.trim();
+    const password = document.getElementById('af-password').value;
+    const specialty = document.getElementById('af-specialty').value.trim();
+    const languages = document.getElementById('af-languages').value.trim();
+    const price = document.getElementById('af-price').value.trim();
+    const experienceYears = document.getElementById('af-experience').value.trim();
+    const about = document.getElementById('af-about').value.trim();
+    const errEl = document.getElementById('af-error');
+    errEl.textContent = '';
+
+    if (!name || !specialty) {
+      errEl.textContent = 'Name and specialty are required.';
+      return;
+    }
+
+    const profileData = { name, specialty, languages, price, experienceYears, about, updatedAt: serverTimestamp() };
+    if (pendingAstroPhoto) profileData.profilePhoto = pendingAstroPhoto;
+
+    try {
+      if (editingAstroUid) {
+        await updateDoc(doc(db, 'astrologers', editingAstroUid), profileData);
+        closeAstroForm();
+        return;
+      }
+
+      // Hiring a new astrologer: validate login fields first
+      if (!email || !password) {
+        errEl.textContent = 'Login email and password are required to hire a new astrologer.';
+        return;
+      }
+      if (password.length < 6) {
+        errEl.textContent = 'Password must be at least 6 characters.';
+        return;
+      }
+
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const newUid = cred.user.uid;
+      await signOut(secondaryAuth); // don't leave the secondary session signed in
+
+      await setDoc(doc(db, 'astrologers', newUid), {
+        ...profileData, email, chatOnline: false, callOnline: false, videoOnline: false,
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      document.getElementById('af-credentials').style.display = 'block';
+      document.getElementById('af-credentials').innerHTML = `
+        <b>Astrologer hired!</b><br>
+        Share these login details with them:<br>
+        Email: <b>${email}</b><br>
+        Password: <b>${password}</b>
+      `;
+      document.getElementById('af-save-btn').style.display = 'none';
+    } catch (e) {
+      errEl.textContent = 'Error: ' + e.message;
+    }
   };
 </script>
 
