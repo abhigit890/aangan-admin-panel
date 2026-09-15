@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Aangan Admin Panel</title>
+<style>
+  :root{
+    --bg:#0C0904; --gold:#D9A94F; --gold-hi:#F5D67F; --ink:#F5EFE2;
+    --card:rgba(255,255,255,0.06); --line:rgba(217,169,79,0.35);
+    --green:#3E9E5C; --dim:#8A7A63;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  /* ---- LOGIN ---- */
+  #login-card{
+    max-width:380px; margin:100px auto; background:var(--card);
+    border:1px solid var(--line); border-radius:18px; padding:28px;
+  }
+  #login-card h1{ color:var(--gold-hi); font-size:22px; text-align:center; margin:0 0 6px; }
+  #login-card p.sub{ text-align:center; font-size:12px; color:var(--dim); margin:0 0 24px; }
+  #login-card input{
+    width:100%; padding:14px; margin-bottom:12px; border-radius:10px;
+    border:1px solid var(--line); background:rgba(255,255,255,0.05);
+    color:var(--ink); font-size:16px;
+  }
+  #login-card button{
+    width:100%; padding:14px; border-radius:10px; border:none;
+    background:var(--gold); color:#2E1D0C; font-weight:700; font-size:16px; cursor:pointer;
+  }
+  #status-msg{ text-align:center; font-size:13px; color:#999; min-height:18px; margin-top:8px; }
+
+  /* ---- LANDING (choose app) ---- */
+  #landing{ display:none; max-width:480px; margin:0 auto; padding:60px 20px; }
+  #landing .header{ text-align:center; margin-bottom:36px; }
+  #landing .header h1{ color:var(--gold-hi); font-size:20px; margin:0 0 4px; }
+  #landing .header p{ font-size:12.5px; color:var(--dim); margin:0; }
+  .choice-btn{
+    display:flex; align-items:center; gap:16px; padding:22px; border-radius:16px;
+    border:1px solid var(--line); background:linear-gradient(160deg, rgba(245,214,127,0.14), rgba(217,169,79,0.05));
+    margin-bottom:16px; cursor:pointer;
+  }
+  .choice-btn .icon{ font-size:32px; }
+  .choice-btn .txt .title{ font-weight:700; font-size:16px; color:var(--gold-hi); }
+  .choice-btn .txt .sub{ font-size:12px; color:var(--dim); margin-top:2px; }
+
+  /* ---- DASHBOARD SHELLS ---- */
+  .dash{ display:none; max-width:600px; margin:0 auto; padding-bottom:40px; }
+  .dash-header{
+    display:flex; align-items:center; gap:14px; padding:18px 20px;
+    border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5;
+  }
+  .dash-header .back{ font-size:20px; cursor:pointer; color:var(--gold-hi); }
+  .dash-header .title{ font-size:17px; font-weight:700; color:var(--gold-hi); }
+  .dash-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; padding:18px 20px; }
+  .dash-tile{
+    background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px 10px; text-align:center; cursor:pointer;
+  }
+  .dash-tile .ic{ font-size:26px; margin-bottom:8px; }
+  .dash-tile .lb{ font-size:13px; font-weight:600; }
+  .placeholder{ text-align:center; color:var(--dim); padding:60px 20px; font-size:13.5px; }
+</style>
+</head>
+<body>
+
+<div id="login-card">
+  <h1>Aangan Admin</h1>
+  <p class="sub">Control panel login</p>
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button id="login-btn">Login</button>
+  <div id="status-msg"></div>
+</div>
+
+<div id="landing">
+  <div class="header">
+    <h1>Welcome, Admin</h1>
+    <p>What would you like to manage?</p>
+  </div>
+  <div class="choice-btn" onclick="showDash('dash-user')">
+    <span class="icon">👤</span>
+    <div class="txt"><div class="title">User App Control</div><div class="sub">Remedies, help chats, live sessions, payments</div></div>
+  </div>
+  <div class="choice-btn" onclick="showDash('dash-astro')">
+    <span class="icon">🔮</span>
+    <div class="txt"><div class="title">Astrologer App Control</div><div class="sub">Features, support tickets, profiles</div></div>
+  </div>
+</div>
+
+<!-- USER APP CONTROL DASHBOARD -->
+<div class="dash" id="dash-user">
+  <div class="dash-header">
+    <span class="back" onclick="showLanding()">←</span>
+    <span class="title">User App Control</span>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-tile"><div class="ic">🙏</div><div class="lb">Remedies List</div></div>
+    <div class="dash-tile"><div class="ic">💬</div><div class="lb">Help Chats</div></div>
+    <div class="dash-tile"><div class="ic">🔴</div><div class="lb">Live Sessions</div></div>
+    <div class="dash-tile"><div class="ic">💳</div><div class="lb">Payments / Refunds</div></div>
+  </div>
+  <div class="placeholder">In-progress — hum ek-ek karke inhe banayenge.</div>
+</div>
+
+<!-- ASTROLOGER APP CONTROL DASHBOARD -->
+<div class="dash" id="dash-astro">
+  <div class="dash-header">
+    <span class="back" onclick="showLanding()">←</span>
+    <span class="title">Astrologer App Control</span>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-tile"><div class="ic">🧑‍🔮</div><div class="lb">Astrologers</div></div>
+    <div class="dash-tile"><div class="ic">🎧</div><div class="lb">Support Tickets</div></div>
+    <div class="dash-tile"><div class="ic">⚙️</div><div class="lb">Features</div></div>
+    <div class="dash-tile"><div class="ic">📊</div><div class="lb">Scoreboard Thresholds</div></div>
+  </div>
+  <div class="placeholder">In-progress — hum ek-ek karke inhe banayenge.</div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import {
+    getAuth, signInWithEmailAndPassword, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDubjcSirXbe4EJSFggYDveb4gVKUEElR0",
+    authDomain: "aangan-ecosystem.firebaseapp.com",
+    projectId: "aangan-ecosystem",
+    storageBucket: "aangan-ecosystem.firebasestorage.app",
+    messagingSenderId: "323610578849",
+    appId: "1:323610578849:web:d0b6128870160a786b85e0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  window.db = db;
+  window.auth = auth;
+
+  const loginCard = document.getElementById('login-card');
+  const landing = document.getElementById('landing');
+  const statusMsg = document.getElementById('status-msg');
+
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    statusMsg.textContent = 'Logging in...';
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      statusMsg.textContent = '';
+    } catch (err) {
+      statusMsg.textContent = 'Error: ' + err.message;
+    }
+  });
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginCard.style.display = 'none';
+      showLanding();
+    } else {
+      loginCard.style.display = 'block';
+      landing.style.display = 'none';
+      document.querySelectorAll('.dash').forEach(d => d.style.display = 'none');
+    }
+  });
+
+  window.showLanding = function() {
+    landing.style.display = 'block';
+    document.querySelectorAll('.dash').forEach(d => d.style.display = 'none');
+  };
+
+  window.showDash = function(id) {
+    landing.style.display = 'none';
+    document.querySelectorAll('.dash').forEach(d => d.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+  };
+</script>
+
+</body>
+</html>
