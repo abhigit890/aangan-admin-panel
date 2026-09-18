@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aangan Operations</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%238F7638'/%3E%3Cstop offset='0.5' stop-color='%23E0BE6E'/%3E%3Cstop offset='1' stop-color='%238F7638'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='15' fill='%2314110C'/%3E%3Ccircle cx='16' cy='16' r='9' fill='url(%23g)'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
@@ -142,17 +143,27 @@ button{ font-family:inherit; }
 .sb-item{
   display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:var(--radius-sm);
   color:var(--paper-dim); font-size:13.5px; font-weight:500; cursor:pointer; margin-bottom:1px;
-  transition:background .12s ease, color .12s ease;
+  transition:background .12s ease, color .12s ease, transform .12s ease;
+  position:relative;
 }
-.sb-item svg{ width:17px; height:17px; flex-shrink:0; opacity:0.85; }
+.sb-item svg{ width:17px; height:17px; flex-shrink:0; opacity:0.85; transition:transform .15s ease, opacity .15s ease; }
 .sb-item:hover{ background:var(--surface-2); color:var(--paper); }
-.sb-item.active{ background:rgba(201,165,74,0.12); color:var(--gold-hi); }
+.sb-item:hover svg{ transform:translateX(1px); }
+.sb-item:active{ transform:scale(0.98); }
+.sb-item.active{ background:rgba(201,165,74,0.12); color:var(--gold-hi); font-weight:600; }
 .sb-item.active svg{ opacity:1; }
+.sb-item.active::before{
+  content:''; position:absolute; left:-12px; top:50%; transform:translateY(-50%);
+  width:3px; height:60%; border-radius:0 3px 3px 0; background:var(--gold);
+}
 .sb-item .count{
   margin-left:auto; font-size:11px; font-weight:700; color:var(--ink); background:var(--gold);
   border-radius:20px; padding:1px 7px; min-width:18px; text-align:center;
 }
 .sb-item .count.zero{ display:none; }
+.sb-item .count.overdue{ background:var(--bad); color:#fff; animation:overduePulse 1.8s ease-in-out infinite; }
+@keyframes overduePulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(193,91,84,0.55); } 50%{ box-shadow:0 0 0 4px rgba(193,91,84,0); } }
+.badge-overdue{ background:rgba(193,91,84,0.14); color:var(--bad); border:1px solid rgba(193,91,84,0.35); font-weight:600; }
 
 .sb-foot{ padding:14px 16px; border-top:1px solid var(--line-soft); }
 .sb-me{ display:flex; align-items:center; gap:10px; }
@@ -178,7 +189,17 @@ button{ font-family:inherit; }
 
 #content{ padding:28px; flex:1; }
 .page{ display:none; }
-.page.active{ display:block; }
+.page.active{ display:block; animation:pageIn .32s cubic-bezier(.16,1,.3,1); }
+@keyframes pageIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+
+/* ============ SKELETON LOADING ============ */
+.skeleton-wrap{ padding:22px 20px; display:flex; flex-direction:column; gap:14px; }
+.skel-bar{
+  height:15px; border-radius:6px;
+  background:linear-gradient(100deg, var(--surface-2) 30%, var(--surface-3) 50%, var(--surface-2) 70%);
+  background-size:250% 100%; animation:skelShine 1.3s ease-in-out infinite;
+}
+@keyframes skelShine{ 0%{ background-position:200% 0; } 100%{ background-position:-50% 0; } }
 
 .page-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:22px; gap:16px; flex-wrap:wrap; }
 .page-head .ph-sub{ color:var(--muted); font-size:13px; margin-top:4px; }
@@ -187,7 +208,9 @@ button{ font-family:inherit; }
 .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:14px; margin-bottom:28px; }
 .stat-card{
   background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px;
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
+.stat-card:hover{ transform:translateY(-2px); border-color:var(--gold-dim); box-shadow:0 10px 28px rgba(0,0,0,0.28); }
 .stat-card .sc-label{ font-size:12.5px; color:var(--muted); font-weight:500; }
 .stat-card .sc-value{ font-family:'Fraunces',serif; font-size:32px; font-weight:500; margin-top:8px; color:var(--paper); }
 .stat-card .sc-value .unit{ font-size:15px; color:var(--muted); font-family:'Inter',sans-serif; margin-left:4px; }
@@ -260,12 +283,16 @@ table.dt tbody tr:last-child td{ border-bottom:none; }
 .overlay{
   display:none; position:fixed; inset:0; z-index:100; background:rgba(10,8,5,0.6);
   align-items:center; justify-content:center; padding:20px;
+  animation:overlayIn .15s ease;
 }
 .overlay.show{ display:flex; }
+@keyframes overlayIn{ from{ opacity:0; } to{ opacity:1; } }
 .modal{
   background:var(--surface); border:1px solid var(--line); border-radius:12px;
   width:100%; max-width:460px; max-height:88vh; overflow-y:auto;
+  animation:modalIn .22s cubic-bezier(.16,1,.3,1);
 }
+@keyframes modalIn{ from{ opacity:0; transform:scale(.96) translateY(6px); } to{ opacity:1; transform:scale(1) translateY(0); } }
 .modal.wide{ max-width:640px; }
 .modal-head{ padding:20px 22px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
 .modal-head h3{ margin:0; font-family:'Fraunces',serif; font-size:18px; font-weight:500; }
@@ -405,6 +432,14 @@ textarea{ resize:vertical; min-height:80px; }
           <span>Team</span>
         </div>
       </div>
+
+      <div class="sb-group" data-roles="super,astro,user">
+        <div class="sb-group-label">Insights</div>
+        <div class="sb-item" data-page="activity" data-roles="super,astro,user">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+          <span>Activity log</span>
+        </div>
+      </div>
     </nav>
     <div class="sb-foot">
       <div class="sb-me">
@@ -436,6 +471,7 @@ textarea{ resize:vertical; min-height:80px; }
       <div class="page active" id="page-overview">
         <div class="page-head">
           <div>
+            <div class="serif" id="ov-title" style="font-size:26px; font-weight:500; color:var(--paper); margin-bottom:5px;">Welcome</div>
             <div class="ph-sub" id="ov-greeting">Here's how things stand right now.</div>
           </div>
         </div>
@@ -490,6 +526,12 @@ textarea{ resize:vertical; min-height:80px; }
       <!-- PAYOUTS -->
       <div class="page" id="page-payouts">
         <div class="page-head"><div><div class="ph-sub">Verify a completed remedy call happened, then release the astrologer's share.</div></div></div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="payouts-search" placeholder="Search by remedy, user or astrologer…">
+          </div>
+        </div>
         <div class="panel"><div class="panel-body" id="payouts-list"><div class="loading-row">Loading…</div></div></div>
       </div>
 
@@ -542,7 +584,27 @@ textarea{ resize:vertical; min-height:80px; }
             Add team member
           </button>
         </div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="team-search" placeholder="Search by name or email…">
+          </div>
+        </div>
         <div class="panel"><div class="panel-body" id="team-wrap"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+      <!-- ACTIVITY LOG -->
+      <div class="page" id="page-activity">
+        <div class="page-head"><div><div class="ph-sub">Every change made by every admin — who did what, and when.</div></div></div>
+        <div class="toolbar" id="activity-toolbar" data-roles="super">
+          <div class="seg" id="activity-seg">
+            <span class="active" data-area="all">All</span>
+            <span data-area="astrologer">Astrologer side</span>
+            <span data-area="user">User side</span>
+            <span data-area="team">Team</span>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-body" id="activity-list"><div class="loading-row">Loading…</div></div></div>
       </div>
 
     </div>
@@ -572,10 +634,11 @@ textarea{ resize:vertical; min-height:80px; }
       </div>
     </div>
     <div class="modal-body">
+      <div id="ticket-claim-banner" style="display:none; margin-bottom:14px; padding:11px 14px; border-radius:var(--radius-sm); font-size:13px;"></div>
       <div id="ticket-thread" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px; max-height:50vh; overflow-y:auto;"></div>
       <div class="field"><textarea id="ticket-reply-text" rows="3" placeholder="Type a reply…"></textarea></div>
       <div style="display:flex; gap:10px;">
-        <button class="btn btn-gold" style="flex:1;" onclick="sendTicketReply()">Send reply</button>
+        <button class="btn btn-gold" style="flex:1;" id="ticket-send-btn" onclick="sendTicketReply()">Send reply</button>
         <button class="btn btn-danger-ghost" id="ticket-close-btn" onclick="closeTicketAsResolved()">Close ticket</button>
       </div>
     </div>
@@ -664,6 +727,19 @@ textarea{ resize:vertical; min-height:80px; }
   </div>
 </div>
 
+<!-- CONFIRM DIALOG -->
+<div class="overlay" id="confirm-overlay">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-body" style="padding-top:26px; padding-bottom:6px;">
+      <p id="confirm-message" style="margin:0; font-size:14.5px; color:var(--paper); line-height:1.5;"></p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="confirm-cancel-btn">Cancel</button>
+      <button class="btn btn-gold" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -693,6 +769,55 @@ function showToast(msg) {
   el.textContent = msg;
   document.getElementById('toast-wrap').appendChild(el);
   setTimeout(() => el.remove(), 3800);
+}
+
+// ---------------- Custom confirm dialog (replaces the browser's native confirm()) ----------------
+function confirmDialog(message, opts) {
+  opts = opts || {};
+  return new Promise(resolve => {
+    const overlay = document.getElementById('confirm-overlay');
+    document.getElementById('confirm-message').textContent = message;
+    const okBtn = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+    okBtn.textContent = opts.okLabel || 'Confirm';
+    okBtn.className = 'btn ' + (opts.danger ? 'btn-danger-ghost' : 'btn-gold');
+    overlay.classList.add('show');
+    function cleanup(result) {
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
+// ---------------- Skeleton loading placeholder (used while a first snapshot is still loading) ----------------
+function skeletonBlock() {
+  return `<div class="skeleton-wrap">
+    <div class="skel-bar" style="width:94%;"></div>
+    <div class="skel-bar" style="width:80%;"></div>
+    <div class="skel-bar" style="width:88%;"></div>
+    <div class="skel-bar" style="width:64%;"></div>
+  </div>`;
+}
+
+// ---------------- Animated count-up for overview stat cards ----------------
+function animateCountUp(el, target, unit) {
+  if (!el) return;
+  const duration = 650;
+  const start = performance.now();
+  function tick(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const val = Math.round(target * eased);
+    el.innerHTML = `${val}<span class="unit">${unit || ''}</span>`;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ---------------- Auth state ----------------
@@ -769,7 +894,7 @@ function enterApp() {
 const PAGE_TITLES = {
   overview: 'Overview', astrologers: 'Astrologers', 'astro-tickets': 'Astrologer support tickets',
   payouts: 'Remedy payouts', reviews: 'Reviews', users: 'Users', 'user-tickets': 'User help chats',
-  remedies: 'Remedies catalog', team: 'Team'
+  remedies: 'Remedies catalog', team: 'Team', activity: 'Activity log'
 };
 
 const PAGE_LOADERS = {}; // filled in by each section below
@@ -803,14 +928,31 @@ function fmtDateTime(ts) {
   return ts.toDate().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+// ---------------- Activity log ----------------
+// area: 'astrologer' | 'user' | 'team' — decides who can see the entry.
+function logActivity(action, target, area, extra) {
+  if (!currentAdmin) return;
+  db.collection('activityLog').add({
+    adminUid: currentAdmin.uid,
+    adminName: currentAdmin.name || currentAdmin.email,
+    adminRole: currentAdmin.role,
+    action, target: target || '', area: area || 'general', extra: extra || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(() => { /* logging is best-effort, never block the real action */ });
+}
+
 function startBadgeCounts() {
   db.collection('supportTickets').where('role', '==', 'astrologer').where('status', '==', 'open').onSnapshot(s => {
     const el = document.getElementById('count-astro-tickets');
+    const rows = []; s.forEach(d => rows.push(d.data()));
     el.textContent = s.size; el.classList.toggle('zero', s.size === 0);
+    el.classList.toggle('overdue', rows.some(isTicketOverdue));
   });
   db.collection('supportTickets').where('role', '==', 'user').where('status', '==', 'open').onSnapshot(s => {
     const el = document.getElementById('count-user-tickets');
+    const rows = []; s.forEach(d => rows.push(d.data()));
     el.textContent = s.size; el.classList.toggle('zero', s.size === 0);
+    el.classList.toggle('overdue', rows.some(isTicketOverdue));
   });
   db.collection('remedyOrders').where('completionStatus', '==', 'pending_review').onSnapshot(s => {
     const el = document.getElementById('count-payouts');
@@ -820,9 +962,13 @@ function startBadgeCounts() {
 
 // ============ OVERVIEW ============
 PAGE_LOADERS.overview = async function() {
-  document.getElementById('ov-greeting').textContent = `Signed in as ${currentAdmin.name} · ${fmtDateTime(firebase.firestore.Timestamp.now())}`;
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 5 ? 'Working late' : hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : hour < 21 ? 'Good evening' : 'Working late';
+  const firstName = (currentAdmin.name || '').trim().split(' ')[0] || currentAdmin.name;
+  document.getElementById('ov-title').textContent = `${timeGreeting}, ${firstName}.`;
+  document.getElementById('ov-greeting').textContent = `Here's how things stand right now — ${fmtDateTime(firebase.firestore.Timestamp.now())}.`;
   const grid = document.getElementById('ov-stats');
-  grid.innerHTML = '<div class="loading-row">Loading…</div>';
+  grid.innerHTML = skeletonBlock();
   const role = currentAdmin.role;
 
   const cards = [];
@@ -839,9 +985,10 @@ PAGE_LOADERS.overview = async function() {
         let sum = 0; reviewSnap.forEach(d => sum += (d.data().rating || 0));
         avgRating = (sum / reviewSnap.size).toFixed(1);
       }
+      const astroOverdue = astroTixSnap.docs.filter(d => isTicketOverdue(d.data())).length;
       cards.push(
         { label: 'Astrologers', value: astroSnap.size, unit: '' },
-        { label: 'Open astrologer tickets', value: astroTixSnap.size, unit: '' },
+        { label: 'Open astrologer tickets', value: astroTixSnap.size, unit: '', overdue: astroOverdue },
         { label: 'Payouts awaiting review', value: payoutSnap.size, unit: '' },
         { label: 'Average rating', value: avgRating, unit: reviewSnap.size ? `/5 · ${reviewSnap.size} reviews` : '' }
       );
@@ -852,31 +999,40 @@ PAGE_LOADERS.overview = async function() {
         db.collection('supportTickets').where('role', '==', 'user').where('status', '==', 'open').get(),
         db.collection('remedies').get()
       ]);
+      const userOverdue = userTixSnap.docs.filter(d => isTicketOverdue(d.data())).length;
       cards.push(
         { label: 'Registered users', value: userSnap.size, unit: '' },
-        { label: 'Open help chats', value: userTixSnap.size, unit: '' },
+        { label: 'Open help chats', value: userTixSnap.size, unit: '', overdue: userOverdue },
         { label: 'Remedies in catalog', value: remedySnap.size, unit: '' }
       );
     }
-    grid.innerHTML = cards.map(c => `
-      <div class="stat-card">
+    grid.innerHTML = cards.map((c, i) => `
+      <div class="stat-card" ${c.overdue ? 'style="border-color:rgba(193,91,84,0.4);"' : ''}>
         <div class="sc-label">${c.label}</div>
-        <div class="sc-value">${c.value}<span class="unit">${c.unit}</span></div>
+        <div class="sc-value" id="sc-value-${i}">${typeof c.value === 'number' ? 0 : c.value}<span class="unit">${c.unit}</span></div>
+        ${c.overdue ? `<div style="margin-top:6px; font-size:12px; color:var(--bad); font-weight:600;">⚠ ${c.overdue} open 3+ days — needs attention</div>` : ''}
       </div>
     `).join('');
+    cards.forEach((c, i) => {
+      if (typeof c.value === 'number') animateCountUp(document.getElementById(`sc-value-${i}`), c.value, c.unit);
+    });
   } catch (e) {
     grid.innerHTML = `<div class="empty">Could not load stats: ${escHtml(e.message)}</div>`;
   }
 
   // Recent open tickets across whichever side(s) this admin covers
   const ticketsPanel = document.getElementById('ov-tickets-panel');
-  ticketsPanel.innerHTML = '<div class="panel-head"><h3>Recently opened tickets</h3></div><div class="loading-row">Loading…</div>';
+  ticketsPanel.innerHTML = '<div class="panel-head"><h3>Recently opened tickets</h3></div>' + skeletonBlock();
   try {
     const roleFilters = role === 'super' ? ['astrologer', 'user'] : role === 'astro' ? ['astrologer'] : ['user'];
     const snaps = await Promise.all(roleFilters.map(r => db.collection('supportTickets').where('role', '==', r).where('status', '==', 'open').get()));
     let rows = [];
     snaps.forEach(s => s.forEach(d => rows.push({ id: d.id, ...d.data() })));
-    rows.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    rows.sort((a, b) => {
+      const aOver = isTicketOverdue(a), bOver = isTicketOverdue(b);
+      if (aOver !== bOver) return aOver ? -1 : 1;
+      return (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0);
+    });
     rows = rows.slice(0, 6);
     if (!rows.length) {
       ticketsPanel.innerHTML = '<div class="panel-head"><h3>Recently opened tickets</h3></div><div class="empty">Nothing waiting on you right now.</div>';
@@ -886,14 +1042,19 @@ PAGE_LOADERS.overview = async function() {
       <div class="panel-head"><h3>Recently opened tickets</h3></div>
       <div class="panel-body">
         <table class="dt"><tbody>
-          ${rows.map(t => `
-            <tr style="cursor:pointer;" onclick="switchPage('${t.role === 'astrologer' ? 'astro-tickets' : 'user-tickets'}')">
-              <td><span class="badge badge-gold">#${t.ticketNumber || '—'}</span></td>
+          ${rows.map(t => {
+            const overdue = isTicketOverdue(t);
+            return `
+            <tr style="cursor:pointer; ${overdue ? 'background:rgba(193,91,84,0.05);' : ''}" onclick="switchPage('${t.role === 'astrologer' ? 'astro-tickets' : 'user-tickets'}')">
+              <td>
+                <span class="badge badge-gold">#${t.ticketNumber || '—'}</span>
+                ${overdue ? `<span class="badge badge-overdue" style="margin-left:6px;">⚠ ${Math.floor(ticketAgeDays(t))}d</span>` : ''}
+              </td>
               <td class="dt-name">${escHtml(t.raisedByName || 'Unknown')}</td>
               <td style="color:var(--muted);">${escHtml(t.lastMessage || '')}</td>
               <td style="text-align:right; color:var(--muted); font-size:12px;">${fmtDateTime(t.createdAt)}</td>
             </tr>
-          `).join('')}
+          `;}).join('')}
         </tbody></table>
       </div>
     `;
@@ -908,7 +1069,7 @@ let astroListUnsub = null;
 
 PAGE_LOADERS.astrologers = function() {
   const wrap = document.getElementById('astro-table-wrap');
-  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  wrap.innerHTML = skeletonBlock();
   if (astroListUnsub) return renderAstroTable();
   astroListUnsub = db.collection('astrologers').onSnapshot(snap => {
     astroListCache = [];
@@ -985,15 +1146,17 @@ function openAstroDrawer(id) {
 function closeAstroDrawer() { document.getElementById('astro-drawer-overlay').classList.remove('show'); }
 
 async function saveAstroEdit(id) {
+  const name = document.getElementById('ad-name').value.trim();
   try {
     await db.collection('astrologers').doc(id).update({
-      name: document.getElementById('ad-name').value.trim(),
+      name,
       specialty: document.getElementById('ad-specialty').value.trim(),
       languages: document.getElementById('ad-languages').value.trim(),
       price: document.getElementById('ad-price').value.trim(),
       about: document.getElementById('ad-about').value.trim(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    logActivity('Updated astrologer profile', name, 'astrologer');
     showToast('Astrologer updated.');
     closeAstroDrawer();
   } catch (e) { showToast('Could not save: ' + e.message); }
@@ -1029,6 +1192,7 @@ async function submitHire() {
       chatOnline: false, callOnline: false, videoOnline: false,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+    logActivity('Added astrologer', name, 'astrologer');
     document.getElementById('hire-credentials').style.display = 'block';
     document.getElementById('hire-credentials').innerHTML = `<b>Astrologer added.</b><br>Share these sign-in details:<br>Email: <b>${escHtml(email)}</b><br>Password: <b>${escHtml(password)}</b>`;
     document.getElementById('hire-submit-btn').style.display = 'none';
@@ -1038,22 +1202,37 @@ async function submitHire() {
 }
 
 // ============ SUPPORT TICKETS (shared logic for astro + user) ============
+const OVERDUE_DAYS = 3; // an open ticket untouched-to-resolution this long surfaces as priority
+function ticketAgeDays(t) {
+  const ref = t.createdAt?.toDate?.() || t.lastMessageAt?.toDate?.();
+  if (!ref) return 0;
+  return (Date.now() - ref.getTime()) / 86400000;
+}
+function isTicketOverdue(t) {
+  return (t.status || 'open') === 'open' && ticketAgeDays(t) >= OVERDUE_DAYS;
+}
+
 const ticketState = {
   astrologer: { unsub: null, cache: [], status: 'open', listEl: 'astix-list', segEl: 'astix-seg' },
   user: { unsub: null, cache: [], status: 'open', listEl: 'usertix-list', segEl: 'usertix-seg' }
 };
 let currentTicketDrawer = null;
 let ticketThreadUnsub = null;
+let ticketDocUnsub = null;
 
 function loadTicketsFor(role) {
   const st = ticketState[role];
   const listEl = document.getElementById(st.listEl);
-  listEl.innerHTML = '<div class="loading-row">Loading…</div>';
+  listEl.innerHTML = skeletonBlock();
   if (st.unsub) st.unsub();
   st.unsub = db.collection('supportTickets').where('role', '==', role).onSnapshot(snap => {
     st.cache = [];
     snap.forEach(d => st.cache.push({ id: d.id, ...d.data() }));
-    st.cache.sort((a, b) => (b.lastMessageAt?.toDate?.() || 0) - (a.lastMessageAt?.toDate?.() || 0));
+    st.cache.sort((a, b) => {
+      const aOver = isTicketOverdue(a), bOver = isTicketOverdue(b);
+      if (aOver !== bOver) return aOver ? -1 : 1; // overdue-open tickets always float to the top
+      return (b.lastMessageAt?.toDate?.() || 0) - (a.lastMessageAt?.toDate?.() || 0);
+    });
     renderTicketList(role);
   }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
 }
@@ -1070,16 +1249,28 @@ function renderTicketList(role) {
   }
   listEl.innerHTML = `
     <table class="dt">
-      <thead><tr><th>#</th><th>Raised by</th><th>Last message</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>Raised by</th><th>Last message</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        ${rows.map(t => `
-          <tr style="cursor:pointer;" onclick="openTicketDrawer('${role}','${t.id}')">
-            <td><span class="badge badge-gold">#${t.ticketNumber || '—'}</span></td>
+        ${rows.map(t => {
+          const claimedByOther = t.claimedBy && t.claimedBy !== currentAdmin.uid && (t.status || 'open') === 'open';
+          const claimedByMe = t.claimedBy && t.claimedBy === currentAdmin.uid && (t.status || 'open') === 'open';
+          const overdue = isTicketOverdue(t);
+          return `
+          <tr style="cursor:pointer; ${overdue ? 'background:rgba(193,91,84,0.05);' : ''}" onclick="openTicketDrawer('${role}','${t.id}')">
+            <td>
+              <span class="badge badge-gold">#${t.ticketNumber || '—'}</span>
+              ${overdue ? `<span class="badge badge-overdue" style="margin-left:6px;" title="Open for ${Math.floor(ticketAgeDays(t))} days with no resolution">⚠ ${Math.floor(ticketAgeDays(t))}d</span>` : ''}
+            </td>
             <td class="dt-name">${escHtml(t.raisedByName || 'Unknown')}</td>
             <td style="color:var(--muted); max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(t.lastMessage || '')}</td>
+            <td style="font-size:12px;">
+              ${claimedByOther ? `<span class="badge badge-bad">🔒 ${escHtml(t.claimedByName || 'Someone')}</span>` : ''}
+              ${claimedByMe ? `<span class="badge badge-good">🔒 You</span>` : ''}
+              ${!t.claimedBy && (t.status || 'open') === 'open' ? `<span style="color:var(--muted);">Unclaimed</span>` : ''}
+            </td>
             <td style="text-align:right; font-size:12px; color:var(--muted);">${fmtDateTime(t.lastMessageAt)}</td>
           </tr>
-        `).join('')}
+        `;}).join('')}
       </tbody>
     </table>
   `;
@@ -1097,11 +1288,11 @@ document.getElementById('usertix-seg').querySelectorAll('span').forEach(s => s.a
 function openTicketDrawer(role, id) {
   currentTicketDrawer = { role, id };
   const t = ticketState[role].cache.find(x => x.id === id);
-  document.getElementById('ticket-drawer-title').textContent = `#${t?.ticketNumber || ''} · ${t?.raisedByName || 'Ticket'}`;
-  document.getElementById('ticket-close-btn').style.display = (t?.status === 'closed') ? 'none' : 'inline-flex';
+  const overdueTag = t && isTicketOverdue(t) ? ` · ⚠ open ${Math.floor(ticketAgeDays(t))}d` : '';
+  document.getElementById('ticket-drawer-title').textContent = `#${t?.ticketNumber || ''} · ${t?.raisedByName || 'Ticket'}${overdueTag}`;
   document.getElementById('ticket-reply-text').value = '';
   const threadEl = document.getElementById('ticket-thread');
-  threadEl.innerHTML = '<div class="loading-row">Loading…</div>';
+  threadEl.innerHTML = skeletonBlock();
   if (ticketThreadUnsub) ticketThreadUnsub();
   ticketThreadUnsub = db.collection('supportTickets').doc(id).collection('messages').orderBy('sentAt', 'asc').onSnapshot(snap => {
     if (snap.empty) { threadEl.innerHTML = '<div class="empty" style="padding:24px 0;">No messages yet.</div>'; return; }
@@ -1112,36 +1303,111 @@ function openTicketDrawer(role, id) {
     }).join('');
     threadEl.scrollTop = threadEl.scrollHeight;
   }, err => { threadEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+
+  // Live-watch the ticket doc itself so the claim state and status update in real time,
+  // even if another admin claims/releases/replies/closes it while this drawer is open.
+  if (ticketDocUnsub) ticketDocUnsub();
+  ticketDocUnsub = db.collection('supportTickets').doc(id).onSnapshot(snap => {
+    if (!snap.exists) return;
+    renderTicketClaimBanner(role, id, { id: snap.id, ...snap.data() });
+  });
+
   document.getElementById('ticket-drawer-overlay').classList.add('show');
 }
+
+function renderTicketClaimBanner(role, id, t) {
+  const banner = document.getElementById('ticket-claim-banner');
+  const replyBox = document.getElementById('ticket-reply-text');
+  const sendBtn = document.getElementById('ticket-send-btn');
+  const closeBtn = document.getElementById('ticket-close-btn');
+  const isClosed = t.status === 'closed';
+  closeBtn.style.display = isClosed ? 'none' : 'inline-flex';
+
+  if (isClosed) {
+    banner.style.display = 'none';
+    replyBox.disabled = false; sendBtn.disabled = false;
+    return;
+  }
+
+  if (!t.claimedBy) {
+    banner.style.display = 'block';
+    banner.style.background = 'var(--surface-2)';
+    banner.style.border = '1px solid var(--line)';
+    banner.style.color = 'var(--muted)';
+    banner.innerHTML = `Nobody is handling this ticket yet. <button class="btn btn-gold" style="padding:5px 12px; font-size:12px; margin-left:8px;" onclick="claimTicket('${role}','${id}')">Claim this ticket</button>`;
+    replyBox.disabled = true; sendBtn.disabled = true;
+  } else if (t.claimedBy === currentAdmin.uid) {
+    banner.style.display = 'block';
+    banner.style.background = 'var(--good-bg)';
+    banner.style.border = '1px solid rgba(79,156,110,0.3)';
+    banner.style.color = 'var(--good)';
+    banner.innerHTML = `You're handling this ticket. <button class="btn btn-ghost" style="padding:5px 12px; font-size:12px; margin-left:8px;" onclick="releaseTicketClaim('${role}','${id}')">Release</button>`;
+    replyBox.disabled = false; sendBtn.disabled = false;
+  } else {
+    banner.style.display = 'block';
+    banner.style.background = 'rgba(200,80,80,0.1)';
+    banner.style.border = '1px solid rgba(200,80,80,0.3)';
+    banner.style.color = 'var(--bad)';
+    banner.innerHTML = `🔒 Already being handled by <b>${escHtml(t.claimedByName || 'another admin')}</b>${t.claimedAt ? ' since ' + fmtDateTime(t.claimedAt) : ''} — to avoid a double reply, wait for them or ask them to release it.`;
+    replyBox.disabled = true; sendBtn.disabled = true;
+  }
+}
+
+async function claimTicket(role, id) {
+  try {
+    await db.collection('supportTickets').doc(id).update({
+      claimedBy: currentAdmin.uid, claimedByName: currentAdmin.name, claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    logActivity('Claimed ticket', `#${ticketState[role].cache.find(x => x.id === id)?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user');
+  } catch (e) { showToast('Could not claim: ' + e.message); }
+}
+
+async function releaseTicketClaim(role, id) {
+  try {
+    await db.collection('supportTickets').doc(id).update({ claimedBy: null, claimedByName: null, claimedAt: null });
+    logActivity('Released ticket', `#${ticketState[role].cache.find(x => x.id === id)?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user');
+  } catch (e) { showToast('Could not release: ' + e.message); }
+}
+
 function closeTicketDrawer() {
   document.getElementById('ticket-drawer-overlay').classList.remove('show');
   if (ticketThreadUnsub) { ticketThreadUnsub(); ticketThreadUnsub = null; }
+  if (ticketDocUnsub) { ticketDocUnsub(); ticketDocUnsub = null; }
   currentTicketDrawer = null;
 }
 
 async function sendTicketReply() {
   if (!currentTicketDrawer) return;
+  const { role, id } = currentTicketDrawer;
+  const t = ticketState[role].cache.find(x => x.id === id);
+  // Guard against a race where someone else claimed it right as this admin was about to reply.
+  if (t && t.claimedBy && t.claimedBy !== currentAdmin.uid) { showToast('This ticket is already being handled by ' + (t.claimedByName || 'another admin') + '.'); return; }
   const text = document.getElementById('ticket-reply-text').value.trim();
   if (!text) return;
   document.getElementById('ticket-reply-text').value = '';
-  const { id } = currentTicketDrawer;
   try {
+    // Claim it (if not already claimed by this admin) at the moment of reply, so a reply always implies a claim.
+    if (!t || !t.claimedBy) {
+      await db.collection('supportTickets').doc(id).update({ claimedBy: currentAdmin.uid, claimedByName: currentAdmin.name, claimedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
     await db.collection('supportTickets').doc(id).collection('messages').add({
       text, senderType: 'admin', sentAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     await db.collection('supportTickets').doc(id).update({
       lastMessage: text, lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    logActivity('Replied to ticket', `#${t?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user');
   } catch (e) { showToast('Could not send: ' + e.message); }
 }
 
 async function closeTicketAsResolved() {
   if (!currentTicketDrawer) return;
-  if (!confirm('Mark this ticket as closed?')) return;
-  const { id } = currentTicketDrawer;
+  if (!(await confirmDialog('Mark this ticket as closed?', { okLabel: 'Close ticket' }))) return;
+  const { role, id } = currentTicketDrawer;
+  const t = ticketState[role].cache.find(x => x.id === id);
   try {
-    await db.collection('supportTickets').doc(id).update({ status: 'closed' });
+    await db.collection('supportTickets').doc(id).update({ status: 'closed', claimedBy: null, claimedByName: null, claimedAt: null });
+    logActivity('Closed ticket', `#${t?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user');
     showToast('Ticket closed.');
     closeTicketDrawer();
   } catch (e) { showToast('Could not close: ' + e.message); }
@@ -1150,15 +1416,29 @@ async function closeTicketAsResolved() {
 // ============ PAYOUTS (remedy completions) ============
 const ASTRO_SHARE_PERCENT = 50;
 let payoutsUnsub = null;
+let payoutsCache = [];
 
 PAGE_LOADERS.payouts = function() {
   const listEl = document.getElementById('payouts-list');
-  listEl.innerHTML = '<div class="loading-row">Loading…</div>';
-  if (payoutsUnsub) return;
+  listEl.innerHTML = skeletonBlock();
+  if (payoutsUnsub) return renderPayoutsList();
   payoutsUnsub = db.collection('remedyOrders').where('completionStatus', '==', 'pending_review').onSnapshot(snap => {
-    if (snap.empty) { listEl.innerHTML = '<div class="empty">Nothing waiting for review.</div>'; return; }
-    const rows = []; snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-    listEl.innerHTML = `
+    payoutsCache = []; snap.forEach(d => payoutsCache.push({ id: d.id, ...d.data() }));
+    renderPayoutsList();
+  }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+document.getElementById('payouts-search').addEventListener('input', renderPayoutsList);
+
+function renderPayoutsList() {
+  const listEl = document.getElementById('payouts-list');
+  const q = (document.getElementById('payouts-search').value || '').toLowerCase();
+  const rows = payoutsCache.filter(o => !q ||
+    (o.remedyName || '').toLowerCase().includes(q) ||
+    (o.userName || '').toLowerCase().includes(q) ||
+    (o.assignedAstrologerName || '').toLowerCase().includes(q));
+  if (!rows.length) { listEl.innerHTML = `<div class="empty">${payoutsCache.length ? 'No matches.' : 'Nothing waiting for review.'}</div>`; return; }
+  listEl.innerHTML = `
       <table class="dt">
         <thead><tr><th>Remedy</th><th>User</th><th>Astrologer</th><th>Call duration</th><th>Price</th><th>Astrologer gets</th><th></th></tr></thead>
         <tbody>
@@ -1182,15 +1462,15 @@ PAGE_LOADERS.payouts = function() {
         </tbody>
       </table>
     `;
-  }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
-};
+}
 
 async function verifyPayout(orderId, astrologerId, priceNum) {
-  if (!confirm(`Confirm the call happened and release ${ASTRO_SHARE_PERCENT}% to the astrologer's wallet?`)) return;
+  if (!(await confirmDialog(`Confirm the call happened and release ${ASTRO_SHARE_PERCENT}% to the astrologer's wallet?`, { okLabel: 'Verify & release' }))) return;
   const share = priceNum * ASTRO_SHARE_PERCENT / 100;
   try {
     await db.collection('astrologers').doc(astrologerId).update({ walletBalance: firebase.firestore.FieldValue.increment(share) });
     await db.collection('remedyOrders').doc(orderId).update({ completionStatus: 'verified', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifiedBy: currentAdmin.uid });
+    logActivity('Verified payout', `₹${share.toFixed(2)}`, 'astrologer');
     showToast('Payout released.');
   } catch (e) { showToast('Error: ' + e.message); }
 }
@@ -1203,7 +1483,7 @@ let reviewAstroNames = {};
 
 PAGE_LOADERS.reviews = function() {
   const listEl = document.getElementById('reviews-list');
-  listEl.innerHTML = '<div class="loading-row">Loading…</div>';
+  listEl.innerHTML = skeletonBlock();
   if (reviewsUnsub) return renderReviewsList();
   reviewsUnsub = db.collection('reviews').onSnapshot(async snap => {
     reviewsCache = [];
@@ -1252,9 +1532,11 @@ function renderReviewsList() {
 }
 
 async function hideReviewAdmin(reviewId) {
-  if (!confirm('Hide this review from the astrologer\'s public profile?')) return;
+  if (!(await confirmDialog("Hide this review from the astrologer's public profile?", { danger: true, okLabel: 'Hide review' }))) return;
   try {
+    const r = reviewsCache.find(x => x.id === reviewId);
     await db.collection('reviews').doc(reviewId).update({ hidden: true, hiddenBy: currentAdmin.uid, hiddenAt: firebase.firestore.FieldValue.serverTimestamp() });
+    logActivity('Hid review', r ? `by ${r.userName || 'user'} for ${reviewAstroNames[r.astrologerId] || 'astrologer'}` : reviewId, 'astrologer');
     showToast('Review hidden.');
   } catch (e) { showToast('Error: ' + e.message); }
 }
@@ -1265,7 +1547,7 @@ let userListUnsub = null;
 
 PAGE_LOADERS.users = function() {
   const wrap = document.getElementById('user-table-wrap');
-  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  wrap.innerHTML = skeletonBlock();
   if (userListUnsub) return renderUserTable();
   userListUnsub = db.collection('users').onSnapshot(snap => {
     userListCache = [];
@@ -1311,7 +1593,7 @@ let pendingRemedyPhoto = null;
 
 PAGE_LOADERS.remedies = function() {
   const wrap = document.getElementById('remedies-wrap');
-  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  wrap.innerHTML = skeletonBlock();
   if (remedyUnsub) return renderRemedyTable();
   remedyUnsub = db.collection('remedies').onSnapshot(snap => {
     remedyCache = [];
@@ -1400,16 +1682,21 @@ async function saveRemedy() {
   if (pendingRemedyPhoto) data.photo = pendingRemedyPhoto;
   if (!data.name || !data.cat) { showToast('Category and name are required.'); return; }
   try {
-    if (id) await db.collection('remedies').doc(id).update(data);
-    else await db.collection('remedies').add(data);
+    if (id) { await db.collection('remedies').doc(id).update(data); logActivity('Updated remedy', data.name, 'user'); }
+    else { await db.collection('remedies').add(data); logActivity('Added remedy', data.name, 'user'); }
     showToast('Remedy saved.');
     closeRemedyModal();
   } catch (e) { showToast('Error: ' + e.message); }
 }
 
 async function deleteRemedy(id) {
-  if (!confirm('Delete this remedy from the catalog?')) return;
-  try { await db.collection('remedies').doc(id).delete(); showToast('Remedy deleted.'); }
+  if (!(await confirmDialog('Delete this remedy from the catalog?', { danger: true, okLabel: 'Delete' }))) return;
+  try {
+    const r = remedyCache.find(x => x.id === id);
+    await db.collection('remedies').doc(id).delete();
+    logActivity('Deleted remedy', r ? r.name : id, 'user');
+    showToast('Remedy deleted.');
+  }
   catch (e) { showToast('Error: ' + e.message); }
 }
 
@@ -1419,7 +1706,7 @@ let teamUnsub = null;
 
 PAGE_LOADERS.team = function() {
   const wrap = document.getElementById('team-wrap');
-  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  wrap.innerHTML = skeletonBlock();
   if (teamUnsub) return renderTeamTable();
   teamUnsub = db.collection('admins').onSnapshot(snap => {
     teamCache = [];
@@ -1429,17 +1716,22 @@ PAGE_LOADERS.team = function() {
   }, err => { wrap.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
 };
 
+document.getElementById('team-search').addEventListener('input', renderTeamTable);
+
 const ROLE_LABEL = { super: 'Super Admin', astro: 'Astrologer Manager', user: 'User Manager' };
 const ROLE_CLASS = { super: 'super', astro: 'astro', user: 'user' };
 
 function renderTeamTable() {
   const wrap = document.getElementById('team-wrap');
+  const q = (document.getElementById('team-search').value || '').toLowerCase();
+  const rows = teamCache.filter(m => !q || (m.name || '').toLowerCase().includes(q) || (m.email || '').toLowerCase().includes(q));
   if (!teamCache.length) { wrap.innerHTML = '<div class="empty">No team members yet.</div>'; return; }
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No matches.</div>'; return; }
   wrap.innerHTML = `
     <table class="dt">
       <thead><tr><th>Name</th><th>Email</th><th>Access</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        ${teamCache.map(m => `
+        ${rows.map(m => `
           <tr>
             <td class="dt-name">${escHtml(m.name || '—')}</td>
             <td style="color:var(--muted);">${escHtml(m.email || '—')}</td>
@@ -1457,9 +1749,11 @@ function renderTeamTable() {
 
 async function toggleAdminActive(uid, isCurrentlyActive) {
   const action = isCurrentlyActive ? 'deactivate' : 'reactivate';
-  if (!confirm(`Are you sure you want to ${action} this team member's access?`)) return;
+  if (!(await confirmDialog(`Are you sure you want to ${action} this team member's access?`, { danger: action === 'deactivate', okLabel: action === 'deactivate' ? 'Deactivate' : 'Reactivate' }))) return;
   try {
+    const m = teamCache.find(x => x.id === uid);
     await db.collection('admins').doc(uid).update({ active: !isCurrentlyActive });
+    logActivity(action === 'deactivate' ? 'Deactivated team member' : 'Reactivated team member', m ? m.name : uid, 'team');
     showToast(`Team member ${action}d.`);
   } catch (e) { showToast('Error: ' + e.message); }
 }
@@ -1491,6 +1785,7 @@ async function submitTeamMember() {
       name, email, role, active: true,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentAdmin.uid
     });
+    logActivity('Added team member', `${name} (${ROLE_LABEL[role] || role})`, 'team');
     document.getElementById('team-credentials').style.display = 'block';
     document.getElementById('team-credentials').innerHTML = `<b>Team member added.</b><br>Share these sign-in details:<br>Email: <b>${escHtml(email)}</b><br>Password: <b>${escHtml(password)}</b>`;
     document.getElementById('team-submit-btn').style.display = 'none';
@@ -1498,6 +1793,86 @@ async function submitTeamMember() {
     errEl.textContent = 'Error: ' + e.message;
   }
 }
+
+// ============ ACTIVITY LOG ============
+let activityCache = [];
+let activityUnsub = null;
+let activityFilter = 'all';
+
+const ACTION_ICONS = {
+  'Added astrologer': '👤', 'Updated astrologer profile': '✏️',
+  'Replied to ticket': '💬', 'Closed ticket': '✅', 'Claimed ticket': '🔒', 'Released ticket': '🔓',
+  'Verified payout': '💰', 'Hid review': '🚫',
+  'Added remedy': '➕', 'Updated remedy': '✏️', 'Deleted remedy': '🗑️',
+  'Added team member': '👥', 'Deactivated team member': '⛔', 'Reactivated team member': '♻️'
+};
+
+PAGE_LOADERS.activity = function() {
+  const listEl = document.getElementById('activity-list');
+  // Non-super roles only ever see their own side; lock the filter to it and hide the toggle.
+  if (currentAdmin.role === 'astro') activityFilter = 'astrologer';
+  else if (currentAdmin.role === 'user') activityFilter = 'user';
+  listEl.innerHTML = skeletonBlock();
+  if (activityUnsub) return renderActivityList();
+  activityUnsub = db.collection('activityLog').onSnapshot(snap => {
+    activityCache = [];
+    snap.forEach(d => activityCache.push({ id: d.id, ...d.data() }));
+    activityCache.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    renderActivityList();
+  }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+document.getElementById('activity-seg').querySelectorAll('span').forEach(s => s.addEventListener('click', () => {
+  document.getElementById('activity-seg').querySelectorAll('span').forEach(x => x.classList.remove('active'));
+  s.classList.add('active'); activityFilter = s.dataset.area; renderActivityList();
+}));
+
+function renderActivityList() {
+  const listEl = document.getElementById('activity-list');
+  // A manager only ever sees their own side (plus general, never-scoped entries); super sees everything.
+  let rows = activityCache;
+  if (currentAdmin.role === 'astro') rows = rows.filter(r => r.area === 'astrologer' || r.area === 'general');
+  else if (currentAdmin.role === 'user') rows = rows.filter(r => r.area === 'user' || r.area === 'general');
+  else if (activityFilter !== 'all') rows = rows.filter(r => r.area === activityFilter);
+  if (!rows.length) { listEl.innerHTML = '<div class="empty">Nothing logged yet.</div>'; return; }
+  listEl.innerHTML = `
+    <table class="dt">
+      <thead><tr><th>When</th><th>Admin</th><th>Action</th><th>Target</th></tr></thead>
+      <tbody>
+        ${rows.slice(0, 300).map(r => `
+          <tr>
+            <td style="white-space:nowrap; color:var(--muted); font-size:12.5px;">${fmtDateTime(r.createdAt)}</td>
+            <td class="dt-name">${escHtml(r.adminName || '—')}</td>
+            <td>${ACTION_ICONS[r.action] || '•'} ${escHtml(r.action || '—')}</td>
+            <td style="color:var(--muted);">${escHtml(r.target || '—')}${r.extra ? ` <span style="color:var(--muted-2, var(--muted));">· ${escHtml(r.extra)}</span>` : ''}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ---------------- Escape key & click-outside close every overlay/drawer ----------------
+const OVERLAY_CLOSERS = {
+  'astro-drawer-overlay': closeAstroDrawer,
+  'ticket-drawer-overlay': closeTicketDrawer,
+  'hire-overlay': closeHireModal,
+  'remedy-overlay': closeRemedyModal,
+  'team-overlay': closeTeamModal,
+  'confirm-overlay': () => document.getElementById('confirm-cancel-btn').click()
+};
+Object.keys(OVERLAY_CLOSERS).forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', (e) => { if (e.target.id === id) OVERLAY_CLOSERS[id](); });
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  Object.keys(OVERLAY_CLOSERS).forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.classList.contains('show')) OVERLAY_CLOSERS[id]();
+  });
+});
 
 </script>
 
