@@ -3,956 +3,1502 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Aangan Admin</title>
+<title>Aangan Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink-bg:#100D08; --panel:#17130D; --line:rgba(200,155,74,0.22);
-    --brass:#C89B4A; --brass-hi:#E8C878; --parchment:#EDE7DA; --dim:#8E8272;
-    --teal:#4B7B73; --rose:#B85C6B; --radius:10px;
-  }
-  *{box-sizing:border-box;}
-  html,body{ height:100%; }
-  body{
-    margin:0; background:var(--ink-bg); color:var(--parchment);
-    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  }
-  h1,h2,h3{ font-family:Georgia,'Times New Roman',serif; font-weight:400; margin:0; }
+:root{
+  --ink:#14110C;
+  --surface:#1C1812;
+  --surface-2:#241F17;
+  --surface-3:#2C2519;
+  --line:#332C20;
+  --line-soft:#241F17;
+  --paper:#F4EFE4;
+  --paper-dim:#D8D0BE;
+  --muted:#9C927D;
+  --muted-2:#6E6656;
+  --gold:#C9A54A;
+  --gold-hi:#E0BE6E;
+  --gold-dim:#8F7638;
+  --good:#4F9C6E;
+  --good-bg:rgba(79,156,110,0.12);
+  --warn:#C97B3D;
+  --warn-bg:rgba(201,123,61,0.12);
+  --bad:#C15B54;
+  --bad-bg:rgba(193,91,84,0.12);
+  --radius:9px;
+  --radius-sm:6px;
+  --sidebar-w:248px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0; padding:0;}
+body{
+  background:var(--ink); color:var(--paper);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+::selection{ background:rgba(201,165,74,0.3); }
+::-webkit-scrollbar{ width:9px; height:9px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:var(--line); border-radius:6px; }
+::-webkit-scrollbar-thumb:hover{ background:var(--muted-2); }
 
-  /* ================= LOGIN ================= */
-  #login-screen{
-    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
-    background:
-      radial-gradient(ellipse at 20% 10%, rgba(200,155,74,0.08), transparent 55%),
-      var(--ink-bg);
-  }
-  #login-card{
-    width:100%; max-width:360px; border:1px solid var(--line); border-radius:14px;
-    padding:36px 28px; background:var(--panel);
-  }
-  #login-card .mark{ font-size:11px; letter-spacing:0.08em; color:var(--brass); margin-bottom:6px; }
-  #login-card h1{ font-size:26px; color:var(--parchment); margin-bottom:4px; }
-  #login-card p.sub{ font-size:12.5px; color:var(--dim); margin:0 0 26px; }
-  #login-card label{ font-size:11px; color:var(--dim); display:block; margin:0 0 5px; }
-  #login-card input{
-    width:100%; padding:11px 12px; margin-bottom:16px; border-radius:8px;
-    border:1px solid var(--line); background:rgba(255,255,255,0.03); color:var(--parchment); font-size:15px;
-  }
-  #login-card button{
-    width:100%; padding:12px; border-radius:8px; border:none;
-    background:var(--brass); color:#1A1305; font-weight:700; font-size:14.5px; cursor:pointer; letter-spacing:0.02em;
-  }
-  #status-msg{ text-align:center; font-size:12.5px; color:var(--rose); min-height:16px; margin-top:10px; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; }
+:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; border-radius:4px; }
 
-  /* ================= APP SHELL ================= */
-  #shell{ display:none; min-height:100vh; }
-  #sidebar{
-    width:220px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--line);
-    padding:22px 0; display:flex; flex-direction:column;
-  }
-  #sidebar .brand{ padding:0 22px 22px; border-bottom:1px solid var(--line); margin-bottom:14px; }
-  #sidebar .brand .mark{ font-size:10.5px; letter-spacing:0.08em; color:var(--brass); }
-  #sidebar .brand h1{ font-size:19px; color:var(--parchment); margin-top:2px; }
-  .side-section{ font-size:10px; letter-spacing:0.06em; color:var(--dim); padding:14px 22px 6px; }
-  .side-link{
-    display:flex; align-items:center; gap:11px; padding:10px 22px; font-size:13.5px;
-    color:var(--dim); cursor:pointer; border-left:2px solid transparent;
-  }
-  .side-link .ic{ font-size:16px; width:18px; text-align:center; }
-  .side-link.active{ color:var(--brass-hi); background:rgba(200,155,74,0.07); border-left-color:var(--brass); }
-  .side-link:hover{ color:var(--parchment); }
-  #sidebar .switch-app{ margin-top:auto; padding:16px 22px 0; border-top:1px solid var(--line); }
-  #sidebar .switch-app a{ font-size:12px; color:var(--dim); cursor:pointer; }
+.serif{ font-family:'Fraunces',serif; }
 
-  #main{ flex:1; min-width:0; }
-  #topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:18px 28px; border-bottom:1px solid var(--line);
-  }
-  #topbar .crumb{ font-size:11px; color:var(--dim); }
-  #topbar h2{ font-size:20px; color:var(--parchment); margin-top:2px; }
-  #topbar .admin-tag{ font-size:12px; color:var(--dim); }
-  #content{ padding:26px 28px 60px; }
+/* ============ LOGIN ============ */
+#screen-login{
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  padding:24px; position:relative; overflow:hidden;
+  background:
+    radial-gradient(60% 50% at 15% -10%, rgba(201,165,74,0.10), transparent 60%),
+    radial-gradient(50% 45% at 100% 110%, rgba(201,165,74,0.06), transparent 60%),
+    var(--ink);
+}
+.login-card{
+  width:100%; max-width:380px; position:relative; z-index:1;
+}
+.login-mark{
+  display:flex; align-items:center; gap:10px; margin-bottom:44px;
+}
+.login-mark .dot{
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
+  background:conic-gradient(from 220deg, var(--gold-dim), var(--gold-hi), var(--gold-dim));
+  box-shadow:0 0 0 1px rgba(201,165,74,0.25), 0 8px 24px rgba(201,165,74,0.12);
+}
+.login-mark .word{ font-family:'Fraunces',serif; font-size:19px; font-weight:500; letter-spacing:0.01em; }
+.login-mark .word small{ display:block; font-family:'Inter',sans-serif; font-size:11px; font-weight:500; color:var(--muted); letter-spacing:0.02em; margin-top:1px; }
 
-  #shell.mobile-layout{ flex-direction:column; }
-  @media (max-width: 760px){
-    #shell{ flex-direction:column; }
-    #sidebar{ width:100%; flex-direction:row; align-items:center; padding:10px 12px; overflow-x:auto; }
-    #sidebar .brand{ display:none; }
-    .side-section{ display:none; }
-    .side-link{ padding:8px 12px; border-left:none; border-bottom:2px solid transparent; white-space:nowrap; }
-    .side-link.active{ border-left-color:transparent; border-bottom-color:var(--brass); }
-    #sidebar .switch-app{ display:none; }
-    #content{ padding:18px 16px 50px; }
-    #topbar{ padding:14px 16px; }
-  }
+.login-h1{
+  font-family:'Fraunces',serif; font-weight:500; font-size:30px; line-height:1.18;
+  margin:0 0 10px; color:var(--paper); max-width:320px;
+}
+.login-sub{ color:var(--muted); font-size:14px; margin:0 0 34px; }
 
-  /* landing (choose app) */
-  #app-picker{ display:flex; flex-direction:column; gap:14px; max-width:520px; }
-  .picker-card{
-    display:flex; align-items:center; gap:16px; padding:22px; border-radius:var(--radius);
-    border:1px solid var(--line); background:var(--panel); cursor:pointer;
-  }
-  .picker-card .ic{ font-size:28px; }
-  .picker-card .t{ font-size:15.5px; font-weight:600; color:var(--brass-hi); }
-  .picker-card .s{ font-size:12px; color:var(--dim); margin-top:3px; }
+.field{ margin-bottom:16px; }
+.field label{ display:block; font-size:12.5px; font-weight:600; color:var(--paper-dim); margin-bottom:7px; }
+.field input{
+  width:100%; padding:12px 14px; border-radius:var(--radius-sm); border:1px solid var(--line);
+  background:var(--surface); color:var(--paper); font-size:14px; font-family:inherit;
+  transition:border-color .15s ease, background .15s ease;
+}
+.field input:focus{ border-color:var(--gold-dim); background:var(--surface-2); outline:none; }
+.field input::placeholder{ color:var(--muted-2); }
 
-  .section-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:14px; }
-  .section-card{
-    border:1px solid var(--line); border-radius:var(--radius); background:var(--panel);
-    padding:20px 16px; cursor:pointer;
-  }
-  .section-card .ic{ font-size:22px; margin-bottom:10px; }
-  .section-card .t{ font-size:13.5px; font-weight:600; }
-  .section-card .s{ font-size:11px; color:var(--dim); margin-top:4px; }
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:11px 18px; border-radius:var(--radius-sm); border:1px solid transparent;
+  font-size:13.5px; font-weight:600; cursor:pointer; transition:filter .12s ease, background .12s ease;
+  font-family:inherit;
+}
+.btn-gold{ background:var(--gold); color:#211A0C; }
+.btn-gold:hover{ filter:brightness(1.08); }
+.btn-gold:active{ filter:brightness(0.95); }
+.btn-ghost{ background:transparent; color:var(--paper-dim); border-color:var(--line); }
+.btn-ghost:hover{ background:var(--surface-2); }
+.btn-danger-ghost{ background:transparent; color:var(--bad); border-color:rgba(193,91,84,0.35); }
+.btn-danger-ghost:hover{ background:var(--bad-bg); }
+.btn-block{ width:100%; }
+.btn:disabled{ opacity:0.5; cursor:not-allowed; }
 
-  /* ================= REMEDIES ================= */
-  .toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; gap:12px; flex-wrap:wrap; }
-  .cat-tabs{ display:flex; gap:6px; flex-wrap:wrap; }
-  .cat-tab{
-    padding:7px 15px; border-radius:20px; border:1px solid var(--line);
-    background:transparent; color:var(--dim); font-size:12.5px; cursor:pointer;
-  }
-  .cat-tab.active{ background:var(--brass); color:#1A1305; border-color:var(--brass); font-weight:600; }
-  .add-btn{
-    width:36px; height:36px; border-radius:50%; background:var(--brass); color:#1A1305;
-    display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; cursor:pointer; flex-shrink:0;
-  }
+.login-error{
+  font-size:13px; color:var(--bad); background:var(--bad-bg); border:1px solid rgba(193,91,84,0.3);
+  padding:10px 13px; border-radius:var(--radius-sm); margin-bottom:16px; display:none;
+}
+.login-error.show{ display:block; }
 
-  .remedy-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:16px; }
-  .remedy-card{
-    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--panel);
-  }
-  .remedy-card .photo{ width:100%; aspect-ratio:16/9; object-fit:cover; display:block; background:#000; }
-  .remedy-card .photo.empty{ display:flex; align-items:center; justify-content:center; color:var(--dim); font-size:11px; }
-  .remedy-card .body{ padding:12px 14px 14px; }
-  .remedy-card .name{ font-size:14px; font-weight:600; margin-bottom:3px; }
-  .remedy-card .price{ font-size:12px; color:var(--brass-hi); }
-  .remedy-card .row2{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
-  .remedy-card .row2 span{ cursor:pointer; font-size:14px; color:var(--dim); }
-  .empty-state{ color:var(--dim); font-size:13px; padding:40px 0; text-align:center; }
+.login-foot{ margin-top:28px; font-size:12px; color:var(--muted-2); }
 
-  /* ================= FORM MODAL ================= */
-  #remedy-form-overlay{
-    display:none; position:fixed; inset:0; background:rgba(8,6,3,0.85); z-index:50;
-    align-items:center; justify-content:center; padding:20px;
-  }
-  #astro-form-overlay{
-    display:none; position:fixed; inset:0; background:rgba(8,6,3,0.85); z-index:50;
-    align-items:center; justify-content:center; padding:20px;
-  }
-  #remedy-form-overlay .modal{
-    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:26px;
-    max-width:420px; width:100%; max-height:88vh; overflow-y:auto;
-  }
-  .modal h2{ font-size:18px; color:var(--brass-hi); margin-bottom:18px; }
-  .modal label{ font-size:11px; color:var(--dim); display:block; margin:0 0 5px; }
-  .modal input[type=text], .modal select, .modal textarea{
-    width:100%; padding:11px 12px; margin-bottom:14px; border-radius:8px;
-    border:1px solid var(--line); background:rgba(255,255,255,0.03); color:var(--parchment); font-family:inherit; font-size:14px;
-  }
-  .modal input[type=file]{ width:100%; margin-bottom:8px; color:var(--parchment); font-size:12.5px; }
-  #rf-photo-preview{
-    width:100%; aspect-ratio:16/9; border-radius:8px; border:1px dashed var(--line); margin-bottom:14px;
-    background:rgba(255,255,255,0.02); display:flex; align-items:center; justify-content:center; color:var(--dim); font-size:12px; overflow:hidden;
-  }
-  #rf-error{ color:var(--rose); font-size:12px; margin-bottom:10px; min-height:14px; }
-  .modal-actions{ display:flex; gap:10px; }
-  .modal-actions button{ flex:1; padding:11px; border-radius:8px; font-size:14px; cursor:pointer; }
-  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--parchment); }
-  .btn-solid{ background:var(--brass); border:none; color:#1A1305; font-weight:700; }
-  .astro-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:14px; }
-  .astro-card{
-    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; background:var(--panel); padding:16px;
-    text-align:center;
-  }
-  .astro-card .aphoto{ width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 10px; display:block; border:2px solid var(--brass); }
-  .astro-card .aphoto-empty{
-    width:72px; height:72px; border-radius:50%; margin:0 auto 10px; background:rgba(200,155,74,0.12);
-    display:flex; align-items:center; justify-content:center; font-size:26px; color:var(--dim);
-  }
-  .astro-card .aname{ font-size:14px; font-weight:700; }
-  .astro-card .aspec{ font-size:11.5px; color:var(--dim); margin-top:2px; }
-  .astro-card .arow2{ display:flex; justify-content:space-between; margin-top:12px; }
-  .astro-card .arow2 span{ cursor:pointer; font-size:13px; color:var(--dim); }
-  .credentials-box{
-    background:rgba(62,158,92,0.1); border:1px solid var(--teal); border-radius:10px; padding:14px; margin-top:14px; font-size:13px;
-  }
-  .credentials-box b{ color:var(--brass-hi); }
+/* ============ APP SHELL ============ */
+#app-shell{ display:none; min-height:100vh; }
+#app-shell.show{ display:flex; }
+
+#sidebar{
+  width:var(--sidebar-w); flex-shrink:0; background:var(--surface);
+  border-right:1px solid var(--line); display:flex; flex-direction:column;
+  position:fixed; top:0; bottom:0; left:0; z-index:40;
+}
+.sb-brand{
+  display:flex; align-items:center; gap:10px; padding:22px 20px 18px;
+  border-bottom:1px solid var(--line-soft);
+}
+.sb-brand .dot{
+  width:26px; height:26px; border-radius:50%; flex-shrink:0;
+  background:conic-gradient(from 220deg, var(--gold-dim), var(--gold-hi), var(--gold-dim));
+}
+.sb-brand .word{ font-family:'Fraunces',serif; font-size:16px; font-weight:500; }
+.sb-brand .word small{ display:block; font-family:'Inter',sans-serif; font-size:10px; color:var(--muted); font-weight:500; margin-top:1px; }
+
+.sb-nav{ flex:1; overflow-y:auto; padding:16px 12px; }
+.sb-group{ margin-bottom:18px; }
+.sb-group-label{ font-size:11px; font-weight:600; color:var(--muted-2); padding:0 10px 7px; letter-spacing:0.02em; }
+.sb-item{
+  display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:var(--radius-sm);
+  color:var(--paper-dim); font-size:13.5px; font-weight:500; cursor:pointer; margin-bottom:1px;
+  transition:background .12s ease, color .12s ease;
+}
+.sb-item svg{ width:17px; height:17px; flex-shrink:0; opacity:0.85; }
+.sb-item:hover{ background:var(--surface-2); color:var(--paper); }
+.sb-item.active{ background:rgba(201,165,74,0.12); color:var(--gold-hi); }
+.sb-item.active svg{ opacity:1; }
+.sb-item .count{
+  margin-left:auto; font-size:11px; font-weight:700; color:var(--ink); background:var(--gold);
+  border-radius:20px; padding:1px 7px; min-width:18px; text-align:center;
+}
+.sb-item .count.zero{ display:none; }
+
+.sb-foot{ padding:14px 16px; border-top:1px solid var(--line-soft); }
+.sb-me{ display:flex; align-items:center; gap:10px; }
+.sb-me .avatar{
+  width:32px; height:32px; border-radius:50%; background:var(--surface-3); color:var(--gold-hi);
+  display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0;
+}
+.sb-me .who{ min-width:0; flex:1; }
+.sb-me .who .name{ font-size:13px; font-weight:600; color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sb-me .who .role{ font-size:11px; color:var(--muted); margin-top:1px; }
+.sb-logout{ cursor:pointer; color:var(--muted); flex-shrink:0; padding:6px; border-radius:6px; }
+.sb-logout:hover{ background:var(--surface-2); color:var(--bad); }
+
+#main{ margin-left:var(--sidebar-w); flex:1; min-width:0; display:flex; flex-direction:column; }
+
+#topbar{
+  height:64px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px; border-bottom:1px solid var(--line); position:sticky; top:0; z-index:30;
+  background:rgba(20,17,12,0.86); backdrop-filter:blur(10px);
+}
+.tb-title{ font-family:'Fraunces',serif; font-size:19px; font-weight:500; }
+.tb-actions{ display:flex; align-items:center; gap:10px; }
+
+#content{ padding:28px; flex:1; }
+.page{ display:none; }
+.page.active{ display:block; }
+
+.page-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:22px; gap:16px; flex-wrap:wrap; }
+.page-head .ph-sub{ color:var(--muted); font-size:13px; margin-top:4px; }
+
+/* ============ STAT CARDS (overview only) ============ */
+.stat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:14px; margin-bottom:28px; }
+.stat-card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px;
+}
+.stat-card .sc-label{ font-size:12.5px; color:var(--muted); font-weight:500; }
+.stat-card .sc-value{ font-family:'Fraunces',serif; font-size:32px; font-weight:500; margin-top:8px; color:var(--paper); }
+.stat-card .sc-value .unit{ font-size:15px; color:var(--muted); font-family:'Inter',sans-serif; margin-left:4px; }
+.stat-card .sc-delta{ font-size:12px; margin-top:8px; display:flex; align-items:center; gap:5px; }
+.stat-card .sc-delta.up{ color:var(--good); }
+.stat-card .sc-delta.down{ color:var(--bad); }
+.stat-card .sc-delta.flat{ color:var(--muted); }
+
+.panel{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); }
+.panel-head{ padding:16px 20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+.panel-head h3{ margin:0; font-size:14.5px; font-weight:600; }
+.panel-body{ padding:8px 4px; }
+.panel-body.pad{ padding:18px 20px; }
+
+/* ============ TOOLBAR ============ */
+.toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.search-box{
+  position:relative; flex:1; min-width:220px; max-width:340px;
+}
+.search-box svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--muted); }
+.search-box input{
+  width:100%; padding:9px 12px 9px 36px; border-radius:var(--radius-sm); border:1px solid var(--line);
+  background:var(--surface); color:var(--paper); font-size:13.5px; font-family:inherit;
+}
+.search-box input:focus{ outline:none; border-color:var(--gold-dim); }
+.seg{ display:flex; border:1px solid var(--line); border-radius:var(--radius-sm); overflow:hidden; }
+.seg span{ padding:8px 14px; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; border-right:1px solid var(--line); }
+.seg span:last-child{ border-right:none; }
+.seg span.active{ background:rgba(201,165,74,0.14); color:var(--gold-hi); }
+.spacer{ flex:1; }
+
+/* ============ TABLE ============ */
+table.dt{ width:100%; border-collapse:collapse; }
+table.dt th{
+  text-align:left; font-size:11.5px; font-weight:600; color:var(--muted); text-transform:none;
+  padding:10px 20px; border-bottom:1px solid var(--line); white-space:nowrap;
+}
+table.dt td{ padding:13px 20px; border-bottom:1px solid var(--line-soft); font-size:13.5px; vertical-align:middle; }
+table.dt tbody tr{ transition:background .1s ease; }
+table.dt tbody tr:hover{ background:var(--surface-2); }
+table.dt tbody tr:last-child td{ border-bottom:none; }
+.dt-num{ font-variant-numeric:tabular-nums; }
+.dt-mono{ font-family:'Roboto Mono',monospace; font-size:12px; color:var(--muted); }
+.dt-name{ font-weight:600; color:var(--paper); }
+.dt-sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+.row-photo{ width:34px; height:34px; border-radius:50%; object-fit:cover; background:var(--surface-3); flex-shrink:0; }
+.row-photo-empty{ width:34px; height:34px; border-radius:50%; background:var(--surface-3); color:var(--gold-hi); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.flex-row{ display:flex; align-items:center; gap:11px; }
+
+.badge{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:20px; }
+.badge-good{ background:var(--good-bg); color:var(--good); }
+.badge-warn{ background:var(--warn-bg); color:var(--warn); }
+.badge-bad{ background:var(--bad-bg); color:var(--bad); }
+.badge-muted{ background:var(--surface-3); color:var(--muted); }
+.badge-gold{ background:rgba(201,165,74,0.14); color:var(--gold-hi); }
+.badge svg{ width:12px; height:12px; }
+
+.icon-btn{
+  width:30px; height:30px; border-radius:7px; border:1px solid var(--line); background:transparent;
+  color:var(--muted); display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.icon-btn svg{ width:15px; height:15px; }
+.icon-btn:hover{ background:var(--surface-2); color:var(--paper); }
+
+.empty{ padding:60px 20px; text-align:center; color:var(--muted); font-size:13.5px; }
+.empty .e-icon{ width:38px; height:38px; margin:0 auto 14px; color:var(--muted-2); }
+.loading-row{ padding:40px; text-align:center; color:var(--muted); font-size:13px; }
+
+/* ============ MODAL / DRAWER ============ */
+.overlay{
+  display:none; position:fixed; inset:0; z-index:100; background:rgba(10,8,5,0.6);
+  align-items:center; justify-content:center; padding:20px;
+}
+.overlay.show{ display:flex; }
+.modal{
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  width:100%; max-width:460px; max-height:88vh; overflow-y:auto;
+}
+.modal.wide{ max-width:640px; }
+.modal-head{ padding:20px 22px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+.modal-head h3{ margin:0; font-family:'Fraunces',serif; font-size:18px; font-weight:500; }
+.modal-close{ cursor:pointer; color:var(--muted); width:26px; height:26px; display:flex; align-items:center; justify-content:center; border-radius:6px; }
+.modal-close:hover{ background:var(--surface-2); color:var(--paper); }
+.modal-body{ padding:22px; }
+.modal-foot{ padding:16px 22px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:10px; }
+
+.drawer-overlay{
+  display:none; position:fixed; inset:0; z-index:100; background:rgba(10,8,5,0.55);
+}
+.drawer-overlay.show{ display:block; }
+.drawer{
+  position:fixed; top:0; right:0; bottom:0; width:420px; max-width:92vw; background:var(--surface);
+  border-left:1px solid var(--line); z-index:101; overflow-y:auto;
+  transform:translateX(100%); transition:transform .22s ease;
+}
+.drawer-overlay.show .drawer{ transform:translateX(0); }
+
+select, textarea{
+  width:100%; padding:11px 13px; border-radius:var(--radius-sm); border:1px solid var(--line);
+  background:var(--surface-2); color:var(--paper); font-size:13.5px; font-family:inherit;
+}
+textarea{ resize:vertical; min-height:80px; }
+
+.toast-wrap{ position:fixed; bottom:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:8px; }
+.toast{
+  background:var(--surface-3); border:1px solid var(--line); color:var(--paper); padding:12px 16px;
+  border-radius:var(--radius-sm); font-size:13px; box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  animation:toastIn .2s ease;
+}
+@keyframes toastIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+
+.tabs2{ display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:18px; }
+.tabs2 span{ padding:10px 4px; margin-right:20px; font-size:13.5px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; }
+.tabs2 span.active{ color:var(--gold-hi); border-color:var(--gold); }
+
+.role-pill{ display:inline-flex; align-items:center; padding:2px 9px; border-radius:20px; font-size:10.5px; font-weight:700; letter-spacing:0.01em; }
+.role-pill.super{ background:rgba(201,165,74,0.16); color:var(--gold-hi); }
+.role-pill.astro{ background:rgba(79,156,110,0.14); color:var(--good); }
+.role-pill.user{ background:rgba(120,144,201,0.14); color:#8FA6E0; }
+
+@media (max-width:920px){
+  :root{ --sidebar-w:0px; }
+  #sidebar{ transform:translateX(-100%); transition:transform .2s ease; width:250px; }
+  #sidebar.open{ transform:translateX(0); }
+  #main{ margin-left:0; }
+  #content{ padding:18px; }
+  .mobile-menu-btn{ display:flex !important; }
+}
+.mobile-menu-btn{ display:none; width:34px; height:34px; align-items:center; justify-content:center; border-radius:7px; border:1px solid var(--line); background:transparent; color:var(--paper); cursor:pointer; }
 </style>
 </head>
 <body>
 
-<div id="login-screen">
-  <div id="login-card">
-    <div class="mark">AANGAN</div>
-    <h1>Admin</h1>
-    <p class="sub">Sign in to the control panel</p>
-    <label>Email</label>
-    <input id="email" type="email" placeholder="you@aangan.com">
-    <label>Password</label>
-    <input id="password" type="password" placeholder="••••••••">
-    <button id="login-btn">Sign in</button>
-    <div id="status-msg"></div>
+<!-- ============ LOGIN ============ -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="login-mark">
+      <div class="dot"></div>
+      <div class="word">Aangan<small>Operations</small></div>
+    </div>
+    <h1 class="login-h1">Sign in to manage the platform.</h1>
+    <p class="login-sub">Use the email and password your administrator gave you.</p>
+    <div class="login-error" id="login-error"></div>
+    <div class="field">
+      <label for="login-email">Email</label>
+      <input type="email" id="login-email" placeholder="you@aangan.app" autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="login-password">Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn btn-gold btn-block" id="login-btn" style="margin-top:6px; padding:13px;">Sign in</button>
+    <p class="login-foot">Access is granted per person by the Aangan team. If you don't have an account yet, ask your administrator to add you under Team.</p>
   </div>
 </div>
 
-<div id="shell">
-  <div id="sidebar">
-    <div class="brand"><div class="mark">AANGAN</div><h1>Admin</h1></div>
-    <div id="side-links"></div>
-    <div class="switch-app"><a onclick="goHome()">← Switch app</a></div>
-  </div>
+<!-- ============ APP SHELL ============ -->
+<div id="app-shell">
+  <aside id="sidebar">
+    <div class="sb-brand">
+      <div class="dot"></div>
+      <div class="word">Aangan<small>Operations</small></div>
+    </div>
+    <nav class="sb-nav" id="sb-nav">
+      <div class="sb-group">
+        <div class="sb-item active" data-page="overview" data-roles="super,astro,user">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          <span>Overview</span>
+        </div>
+      </div>
+
+      <div class="sb-group" data-roles="super,astro">
+        <div class="sb-group-label">Astrologer side</div>
+        <div class="sb-item" data-page="astrologers" data-roles="super,astro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span>Astrologers</span>
+        </div>
+        <div class="sb-item" data-page="astro-tickets" data-roles="super,astro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Support tickets</span>
+          <span class="count zero" id="count-astro-tickets">0</span>
+        </div>
+        <div class="sb-item" data-page="payouts" data-roles="super,astro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5h4.5a1.5 1.5 0 0 1 0 3H10a1.5 1.5 0 0 0 0 3h5"/></svg>
+          <span>Remedy payouts</span>
+          <span class="count zero" id="count-payouts">0</span>
+        </div>
+        <div class="sb-item" data-page="reviews" data-roles="super,astro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l2.6 5.6 6.1.6-4.6 4.2 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.2 6.1-.6z"/></svg>
+          <span>Reviews</span>
+        </div>
+      </div>
+
+      <div class="sb-group" data-roles="super,user">
+        <div class="sb-group-label">User side</div>
+        <div class="sb-item" data-page="users" data-roles="super,user">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.4"/><path d="M2.5 20c0-3.4 3-6 6.5-6s6.5 2.6 6.5 6"/><circle cx="18" cy="8" r="2.6"/><path d="M15.8 14.3c2.9.4 5.2 2.7 5.2 5.7"/></svg>
+          <span>Users</span>
+        </div>
+        <div class="sb-item" data-page="user-tickets" data-roles="super,user">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Help chats</span>
+          <span class="count zero" id="count-user-tickets">0</span>
+        </div>
+        <div class="sb-item" data-page="remedies" data-roles="super,user">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2c1.4 2.6 2.2 4.8 2.2 6.6a2.2 2.2 0 1 1-4.4 0C9.8 6.8 10.6 4.6 12 2z"/><path d="M5 22c0-5 3-8 7-8s7 3 7 8"/></svg>
+          <span>Remedies catalog</span>
+        </div>
+      </div>
+
+      <div class="sb-group" data-roles="super">
+        <div class="sb-group-label">Administration</div>
+        <div class="sb-item" data-page="team" data-roles="super">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>
+          <span>Team</span>
+        </div>
+      </div>
+    </nav>
+    <div class="sb-foot">
+      <div class="sb-me">
+        <div class="avatar" id="me-avatar">A</div>
+        <div class="who">
+          <div class="name" id="me-name">—</div>
+          <div class="role" id="me-role">—</div>
+        </div>
+        <div class="sb-logout" id="logout-btn" title="Sign out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <div id="main">
     <div id="topbar">
-      <div>
-        <div class="crumb" id="crumb-text">Aangan Admin</div>
-        <h2 id="topbar-title">Dashboard</h2>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <button class="mobile-menu-btn" id="mobile-menu-btn">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="tb-title" id="tb-title">Overview</div>
       </div>
-      <div class="admin-tag" id="admin-tag"></div>
+      <div class="tb-actions" id="tb-actions"></div>
     </div>
-    <div id="content"></div>
+    <div id="content">
+
+      <!-- OVERVIEW -->
+      <div class="page active" id="page-overview">
+        <div class="page-head">
+          <div>
+            <div class="ph-sub" id="ov-greeting">Here's how things stand right now.</div>
+          </div>
+        </div>
+        <div class="stat-grid" id="ov-stats"></div>
+        <div class="panel" style="margin-bottom:16px;" id="ov-tickets-panel"></div>
+      </div>
+
+      <!-- ASTROLOGERS -->
+      <div class="page" id="page-astrologers">
+        <div class="page-head">
+          <div><div class="ph-sub">Everyone offering consultations on Aangan.</div></div>
+          <button class="btn btn-gold" onclick="openHireModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            Add astrologer
+          </button>
+        </div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="astro-search" placeholder="Search by name or specialty…">
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-body" id="astro-table-wrap"><div class="loading-row">Loading…</div></div>
+        </div>
+      </div>
+
+      <!-- ASTRO TICKETS -->
+      <div class="page" id="page-astro-tickets">
+        <div class="page-head"><div><div class="ph-sub">Issues raised by astrologers.</div></div></div>
+        <div class="toolbar">
+          <div class="seg" id="astix-seg">
+            <span class="active" data-status="open">Open</span>
+            <span data-status="closed">Closed</span>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-body" id="astix-list"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+      <!-- USER TICKETS -->
+      <div class="page" id="page-user-tickets">
+        <div class="page-head"><div><div class="ph-sub">Issues raised by users.</div></div></div>
+        <div class="toolbar">
+          <div class="seg" id="usertix-seg">
+            <span class="active" data-status="open">Open</span>
+            <span data-status="closed">Closed</span>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-body" id="usertix-list"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+      <!-- PAYOUTS -->
+      <div class="page" id="page-payouts">
+        <div class="page-head"><div><div class="ph-sub">Verify a completed remedy call happened, then release the astrologer's share.</div></div></div>
+        <div class="panel"><div class="panel-body" id="payouts-list"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+      <!-- REVIEWS -->
+      <div class="page" id="page-reviews">
+        <div class="page-head"><div><div class="ph-sub">What clients are saying, across every astrologer.</div></div></div>
+        <div class="toolbar">
+          <div class="seg" id="reviews-seg">
+            <span class="active" data-star="all">All</span>
+            <span data-star="5">5★</span>
+            <span data-star="4">4★</span>
+            <span data-star="3">3★</span>
+            <span data-star="2">2★</span>
+            <span data-star="1">1★</span>
+          </div>
+        </div>
+        <div class="panel"><div class="panel-body" id="reviews-list"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div class="page-head"><div><div class="ph-sub">Everyone using Aangan to consult an astrologer.</div></div></div>
+        <div class="toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="user-search" placeholder="Search by name or email…">
+          </div>
+        </div>
+        <div class="panel"><div class="panel-body" id="user-table-wrap"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+      <!-- REMEDIES -->
+      <div class="page" id="page-remedies">
+        <div class="page-head">
+          <div><div class="ph-sub">The poojas and rituals users can order.</div></div>
+          <button class="btn btn-gold" onclick="openRemedyModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            Add remedy
+          </button>
+        </div>
+        <div class="panel"><div class="panel-body" id="remedies-wrap"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+      <!-- TEAM -->
+      <div class="page" id="page-team">
+        <div class="page-head">
+          <div><div class="ph-sub">Who has access to this dashboard, and what they can see.</div></div>
+          <button class="btn btn-gold" onclick="openTeamModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            Add team member
+          </button>
+        </div>
+        <div class="panel"><div class="panel-body" id="team-wrap"><div class="loading-row">Loading…</div></div></div>
+      </div>
+
+    </div>
   </div>
 </div>
 
-<!-- ADD/EDIT REMEDY MODAL -->
-<div id="remedy-form-overlay">
+<!-- ASTROLOGER DRAWER -->
+<div class="drawer-overlay" id="astro-drawer-overlay">
+  <div class="drawer">
+    <div class="modal-head">
+      <h3>Astrologer</h3>
+      <div class="modal-close" onclick="closeAstroDrawer()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body" id="astro-drawer-body"></div>
+  </div>
+</div>
+
+<!-- TICKET DRAWER -->
+<div class="drawer-overlay" id="ticket-drawer-overlay">
+  <div class="drawer">
+    <div class="modal-head">
+      <h3 id="ticket-drawer-title">Ticket</h3>
+      <div class="modal-close" onclick="closeTicketDrawer()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="ticket-thread" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px; max-height:50vh; overflow-y:auto;"></div>
+      <div class="field"><textarea id="ticket-reply-text" rows="3" placeholder="Type a reply…"></textarea></div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-gold" style="flex:1;" onclick="sendTicketReply()">Send reply</button>
+        <button class="btn btn-danger-ghost" id="ticket-close-btn" onclick="closeTicketAsResolved()">Close ticket</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HIRE MODAL -->
+<div class="overlay" id="hire-overlay">
   <div class="modal">
-    <h2 id="remedy-form-title">Add remedy</h2>
-    <label>Category</label>
-    <select id="rf-cat">
-      <option value="pooja">Pooja</option>
-      <option value="spell">Spell</option>
-      <option value="gemstone">Gemstone</option>
-      <option value="rudraksh">Rudraksh</option>
-    </select>
-    <label>Photo (16:9)</label>
-    <input id="rf-photo" type="file" accept="image/*">
-    <div id="rf-photo-preview">No photo selected</div>
-    <label>Name</label>
-    <input id="rf-name" type="text" placeholder="e.g. Griha Shanti Pooja">
-    <label>Description</label>
-    <textarea id="rf-desc" rows="4" placeholder="Full description of this remedy"></textarea>
-    <label>Price</label>
-    <input id="rf-price" type="text" placeholder="e.g. From ₹1,100">
-    <div id="rf-error"></div>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeRemedyForm()">Cancel</button>
-      <button class="btn-solid" onclick="saveRemedy()">Save</button>
+    <div class="modal-head">
+      <h3>Add an astrologer</h3>
+      <div class="modal-close" onclick="closeHireModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="hire-credentials" style="display:none; background:var(--good-bg); border:1px solid rgba(79,156,110,0.3); color:var(--good); padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:16px;"></div>
+      <div class="field"><label>Full name</label><input type="text" id="hf-name" placeholder="Priya Sharma"></div>
+      <div class="field"><label>Login email</label><input type="email" id="hf-email" placeholder="priya@aangan.app"></div>
+      <div class="field"><label>Temporary password</label><input type="text" id="hf-password" placeholder="At least 6 characters"></div>
+      <div class="field"><label>Specialty</label><input type="text" id="hf-specialty" placeholder="Vedic Astrology, Tarot, Numerology…"></div>
+      <div class="field"><label>Languages</label><input type="text" id="hf-languages" placeholder="Hindi, English"></div>
+      <div class="field"><label>Price per minute (₹)</label><input type="number" id="hf-price" placeholder="15"></div>
+      <div id="hire-error" style="color:var(--bad); font-size:12.5px; margin-top:4px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeHireModal()">Cancel</button>
+      <button class="btn btn-gold" id="hire-submit-btn" onclick="submitHire()">Add astrologer</button>
     </div>
   </div>
 </div>
 
-<!-- HIRE / EDIT ASTROLOGER MODAL -->
-<div id="astro-form-overlay">
+<!-- REMEDY MODAL -->
+<div class="overlay" id="remedy-overlay">
   <div class="modal">
-    <h2 id="astro-form-title">Hire an Astrologer</h2>
-
-    <label>Profile Photo</label>
-    <input id="af-photo" type="file" accept="image/*">
-    <div id="af-photo-preview" style="width:96px; height:96px; border-radius:50%; border:1px dashed var(--line); margin:0 auto 14px; display:flex; align-items:center; justify-content:center; color:var(--dim); font-size:11px; overflow:hidden; background:rgba(255,255,255,0.02);">No photo</div>
-
-    <label>Full Name</label>
-    <input type="text" id="af-name" placeholder="e.g. Guru Meera Devi">
-
-    <label>Login Email <span style="color:var(--dim); font-weight:400;">(used to sign in to the astrologer app)</span></label>
-    <input type="text" id="af-email" placeholder="astrologer@aangan.com">
-
-    <label id="af-password-label">Login Password</label>
-    <input type="text" id="af-password" placeholder="Set a password (min 6 characters)">
-
-    <label>Specialty</label>
-    <input type="text" id="af-specialty" placeholder="e.g. Vedic, Tarot, Numerology">
-
-    <label>Languages</label>
-    <input type="text" id="af-languages" placeholder="e.g. Hindi, English">
-
-    <label>Price (₹ per minute)</label>
-    <input type="text" id="af-price" placeholder="e.g. 25">
-
-    <label>Experience (years)</label>
-    <input type="text" id="af-experience" placeholder="e.g. 8">
-
-    <label>About</label>
-    <textarea id="af-about" rows="4" placeholder="A short bio for this astrologer's profile"></textarea>
-
-    <div id="af-error"></div>
-    <div id="af-credentials" class="credentials-box" style="display:none;"></div>
-
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeAstroForm()">Cancel</button>
-      <button class="btn-solid" id="af-save-btn" onclick="saveAstrologer()">Hire Astrologer</button>
+    <div class="modal-head">
+      <h3 id="remedy-modal-title">Add a remedy</h3>
+      <div class="modal-close" onclick="closeRemedyModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Category</label><input type="text" id="rf-cat" placeholder="Pooja, Homam, Remedy Kit…"></div>
+      <div class="field"><label>Name</label><input type="text" id="rf-name" placeholder="Griha Shanti Pooja"></div>
+      <div class="field"><label>Description</label><textarea id="rf-desc" rows="3" placeholder="What this remedy is for…"></textarea></div>
+      <div class="field"><label>Price</label><input type="text" id="rf-price" placeholder="₹1,100"></div>
+      <div class="field"><label>Photo</label><input type="file" id="rf-photo" accept="image/*"></div>
+      <img id="rf-photo-preview" style="display:none; margin-top:8px; width:100%; max-width:220px; border-radius:8px; aspect-ratio:16/9; object-fit:cover;">
+      <input type="hidden" id="rf-editing-id">
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeRemedyModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveRemedy()">Save remedy</button>
     </div>
   </div>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import {
-    getAuth, signInWithEmailAndPassword, onAuthStateChanged, createUserWithEmailAndPassword, signOut
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-  import {
-    getFirestore, collection, query, where, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, serverTimestamp, increment
-  } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDubjcSirXbe4EJSFggYDveb4gVKUEElR0",
-    authDomain: "aangan-ecosystem.firebaseapp.com",
-    projectId: "aangan-ecosystem",
-    storageBucket: "aangan-ecosystem.firebasestorage.app",
-    messagingSenderId: "323610578849",
-    appId: "1:323610578849:web:d0b6128870160a786b85e0"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-  window.db = db;
-
-  // Secondary Firebase app instance — used only to create new astrologer
-  // login accounts, so it doesn't sign the admin out of their own session.
-  const secondaryApp = initializeApp(firebaseConfig, "AstrologerCreator");
-  const secondaryAuth = getAuth(secondaryApp);
-
-  const loginScreen = document.getElementById('login-screen');
-  const shell = document.getElementById('shell');
-  const statusMsg = document.getElementById('status-msg');
-
-  document.getElementById('login-btn').addEventListener('click', async () => {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    statusMsg.textContent = 'Signing in...';
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      statusMsg.textContent = '';
-    } catch (err) {
-      statusMsg.textContent = err.message;
-    }
-  });
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      loginScreen.style.display = 'none';
-      shell.style.display = 'flex';
-      document.getElementById('admin-tag').textContent = user.email;
-      goHome();
-    } else {
-      loginScreen.style.display = 'flex';
-      shell.style.display = 'none';
-    }
-  });
-
-  // ---- Navigation state ----
-  let currentApp = null; // 'user' | 'astro' | null (home)
-
-  const NAV = {
-    user: {
-      title: "User App Control",
-      links: [
-        { id: 'remedies', label: 'Remedies List', icon: '🙏' },
-        { id: 'helpchats', label: 'Help Chats', icon: '💬' },
-        { id: 'live', label: 'Live Sessions', icon: '🔴' },
-        { id: 'payments', label: 'Remedy Completions', icon: '💳' },
-      ]
-    },
-    astro: {
-      title: "Astrologer App Control",
-      links: [
-        { id: 'astrologers', label: 'Astrologers', icon: '🧑‍🔮' },
-        { id: 'tickets', label: 'Support Tickets', icon: '🎧' },
-        { id: 'features', label: 'Features', icon: '⚙️' },
-        { id: 'thresholds', label: 'Scoreboard Thresholds', icon: '📊' },
-      ]
-    }
-  };
-
-  window.goHome = function() {
-    currentApp = null;
-    document.getElementById('side-links').innerHTML = '';
-    document.getElementById('crumb-text').textContent = 'Aangan Admin';
-    document.getElementById('topbar-title').textContent = 'Dashboard';
-    document.getElementById('content').innerHTML = `
-      <div id="app-picker">
-        <div class="picker-card" onclick="openApp('user')">
-          <span class="ic">👤</span>
-          <div><div class="t">User App Control</div><div class="s">Remedies, help chats, live sessions, payments</div></div>
-        </div>
-        <div class="picker-card" onclick="openApp('astro')">
-          <span class="ic">🔮</span>
-          <div><div class="t">Astrologer App Control</div><div class="s">Astrologers, support tickets, features</div></div>
-        </div>
+<!-- TEAM MODAL -->
+<div class="overlay" id="team-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Add a team member</h3>
+      <div class="modal-close" onclick="closeTeamModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </div>
-    `;
-  };
-
-  window.openApp = function(appKey) {
-    currentApp = appKey;
-    const nav = NAV[appKey];
-    document.getElementById('crumb-text').textContent = nav.title;
-    document.getElementById('side-links').innerHTML = `
-      <div class="side-section">Sections</div>
-      ${nav.links.map(l => `<div class="side-link" data-id="${l.id}" onclick="openSection('${l.id}')"><span class="ic">${l.icon}</span>${l.label}</div>`).join('')}
-    `;
-    openSection(nav.links[0].id);
-  };
-
-  window.openSection = function(sectionId) {
-    document.querySelectorAll('.side-link').forEach(l => l.classList.toggle('active', l.dataset.id === sectionId));
-    const nav = NAV[currentApp];
-    const link = nav.links.find(l => l.id === sectionId);
-    document.getElementById('topbar-title').textContent = link ? link.label : '';
-
-    if (sectionId === 'remedies') { renderRemediesSection(); return; }
-    if (sectionId === 'tickets') { renderTicketsSection('astrologer'); return; }
-    if (sectionId === 'helpchats') { renderTicketsSection('user'); return; }
-    if (sectionId === 'astrologers') { renderAstrologersSection(); return; }
-    if (sectionId === 'payments') { renderRemedyCompletionsSection(); return; }
-
-    document.getElementById('content').innerHTML = `<div class="empty-state">This section is coming soon.</div>`;
-  };
-
-  // ================= REMEDIES =================
-  let currentRemedyCat = 'pooja';
-  let remedyUnsub = null;
-  let editingRemedyId = null;
-  window.currentRemedyDocs = {};
-
-  function renderRemediesSection() {
-    document.getElementById('content').innerHTML = `
-      <div class="toolbar">
-        <div class="cat-tabs" id="remedy-cat-tabs">
-          <button class="cat-tab active" data-cat="pooja">Pooja</button>
-          <button class="cat-tab" data-cat="spell">Spell</button>
-          <button class="cat-tab" data-cat="gemstone">Gemstone</button>
-          <button class="cat-tab" data-cat="rudraksh">Rudraksh</button>
-        </div>
-        <div class="add-btn" id="add-remedy-btn">+</div>
+    </div>
+    <div class="modal-body">
+      <div id="team-credentials" style="display:none; background:var(--good-bg); border:1px solid rgba(79,156,110,0.3); color:var(--good); padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:16px;"></div>
+      <div class="field"><label>Full name</label><input type="text" id="tf-name" placeholder="Ananya Gupta"></div>
+      <div class="field"><label>Login email</label><input type="email" id="tf-email" placeholder="ananya@aangan.app"></div>
+      <div class="field"><label>Temporary password</label><input type="text" id="tf-password" placeholder="At least 6 characters"></div>
+      <div class="field">
+        <label>Access</label>
+        <select id="tf-role">
+          <option value="astro">Astrologer Manager — sees the astrologer side only</option>
+          <option value="user">User Manager — sees the user side only</option>
+          <option value="super">Super Admin — sees everything, including Team</option>
+        </select>
       </div>
-      <div class="remedy-grid" id="remedies-list"></div>
-    `;
-    document.querySelectorAll('.cat-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
-        tab.classList.add('active');
-        currentRemedyCat = tab.dataset.cat;
-        loadRemedies(currentRemedyCat);
-      });
-    });
-    document.getElementById('add-remedy-btn').addEventListener('click', openAddRemedyForm);
-    loadRemedies(currentRemedyCat);
+      <div id="team-error" style="color:var(--bad); font-size:12.5px; margin-top:4px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeTeamModal()">Cancel</button>
+      <button class="btn btn-gold" id="team-submit-btn" onclick="submitTeamMember()">Add team member</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDubjcSirXbe4EJSFggYDveb4gVKUEElR0",
+  authDomain: "aangan-ecosystem.firebaseapp.com",
+  projectId: "aangan-ecosystem",
+  storageBucket: "aangan-ecosystem.firebasestorage.app",
+  messagingSenderId: "323610578849",
+  appId: "1:323610578849:web:d0b6128870160a786b85e0"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Secondary app instance so creating a new team member doesn't sign the current admin out.
+const secondaryApp = firebase.initializeApp(firebaseConfig, "secondary");
+const secondaryAuth = secondaryApp.auth();
+
+// ---------------- Toast ----------------
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(() => el.remove(), 3800);
+}
+
+// ---------------- Auth state ----------------
+let currentAdmin = null; // { uid, name, email, role }
+
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    document.getElementById('screen-login').style.display = 'flex';
+    document.getElementById('app-shell').classList.remove('show');
+    return;
   }
+  try {
+    const snap = await db.collection('admins').doc(user.uid).get();
+    if (!snap.exists || snap.data().active === false) {
+      document.getElementById('login-error').textContent = 'This account is not set up as an administrator, or has been deactivated. Ask your administrator for access.';
+      document.getElementById('login-error').classList.add('show');
+      await auth.signOut();
+      return;
+    }
+    const a = snap.data();
+    currentAdmin = { uid: user.uid, name: a.name || user.email, email: user.email, role: a.role || 'user' };
+    enterApp();
+  } catch (e) {
+    document.getElementById('login-error').textContent = 'Could not verify your access: ' + e.message;
+    document.getElementById('login-error').classList.add('show');
+    await auth.signOut();
+  }
+});
 
-  function loadRemedies(cat) {
-    const listEl = document.getElementById('remedies-list');
-    if (!listEl) return;
-    listEl.innerHTML = '<div class="empty-state">Loading...</div>';
-    if (remedyUnsub) remedyUnsub();
-    const q = query(collection(db, 'remedies'), where('cat', '==', cat));
-    remedyUnsub = onSnapshot(q, (snap) => {
-      if (snap.empty) {
-        listEl.innerHTML = '<div class="empty-state">No remedies in this category yet.</div>';
-        return;
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('login-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+  if (!email || !password) { errEl.textContent = 'Enter your email and password.'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (e) {
+    errEl.textContent = 'Could not sign in: ' + e.message;
+    errEl.classList.add('show');
+  }
+  btn.disabled = false; btn.textContent = 'Sign in';
+}
+
+document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
+
+// ---------------- App entry & role-based nav ----------------
+function enterApp() {
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('app-shell').classList.add('show');
+
+  document.getElementById('me-name').textContent = currentAdmin.name;
+  document.getElementById('me-avatar').textContent = (currentAdmin.name || '?').trim().charAt(0).toUpperCase();
+  const roleLabel = { super: 'Super Admin', astro: 'Astrologer Manager', user: 'User Manager' };
+  document.getElementById('me-role').textContent = roleLabel[currentAdmin.role] || currentAdmin.role;
+
+  document.querySelectorAll('[data-roles]').forEach(el => {
+    const roles = el.dataset.roles.split(',');
+    el.style.display = roles.includes(currentAdmin.role) ? '' : 'none';
+  });
+
+  // Land on the first visible nav item.
+  const firstVisible = document.querySelector('.sb-item[data-page]:not([style*="display: none"])');
+  switchPage(firstVisible ? firstVisible.dataset.page : 'overview');
+
+  startBadgeCounts();
+}
+
+const PAGE_TITLES = {
+  overview: 'Overview', astrologers: 'Astrologers', 'astro-tickets': 'Astrologer support tickets',
+  payouts: 'Remedy payouts', reviews: 'Reviews', users: 'Users', 'user-tickets': 'User help chats',
+  remedies: 'Remedies catalog', team: 'Team'
+};
+
+const PAGE_LOADERS = {}; // filled in by each section below
+
+function switchPage(page) {
+  document.querySelectorAll('.sb-item[data-page]').forEach(el => el.classList.toggle('active', el.dataset.page === page));
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('tb-title').textContent = PAGE_TITLES[page] || page;
+  document.getElementById('sidebar').classList.remove('open');
+  if (PAGE_LOADERS[page]) PAGE_LOADERS[page]();
+}
+
+document.querySelectorAll('.sb-item[data-page]').forEach(el => {
+  el.addEventListener('click', () => switchPage(el.dataset.page));
+});
+
+document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+});
+
+function escHtml(s) {
+  return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtDate(ts) {
+  if (!ts || !ts.toDate) return '—';
+  return ts.toDate().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+function fmtDateTime(ts) {
+  if (!ts || !ts.toDate) return '—';
+  return ts.toDate().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function startBadgeCounts() {
+  db.collection('supportTickets').where('role', '==', 'astrologer').where('status', '==', 'open').onSnapshot(s => {
+    const el = document.getElementById('count-astro-tickets');
+    el.textContent = s.size; el.classList.toggle('zero', s.size === 0);
+  });
+  db.collection('supportTickets').where('role', '==', 'user').where('status', '==', 'open').onSnapshot(s => {
+    const el = document.getElementById('count-user-tickets');
+    el.textContent = s.size; el.classList.toggle('zero', s.size === 0);
+  });
+  db.collection('remedyOrders').where('completionStatus', '==', 'pending_review').onSnapshot(s => {
+    const el = document.getElementById('count-payouts');
+    el.textContent = s.size; el.classList.toggle('zero', s.size === 0);
+  });
+}
+
+// ============ OVERVIEW ============
+PAGE_LOADERS.overview = async function() {
+  document.getElementById('ov-greeting').textContent = `Signed in as ${currentAdmin.name} · ${fmtDateTime(firebase.firestore.Timestamp.now())}`;
+  const grid = document.getElementById('ov-stats');
+  grid.innerHTML = '<div class="loading-row">Loading…</div>';
+  const role = currentAdmin.role;
+
+  const cards = [];
+  try {
+    if (role === 'super' || role === 'astro') {
+      const [astroSnap, astroTixSnap, payoutSnap, reviewSnap] = await Promise.all([
+        db.collection('astrologers').get(),
+        db.collection('supportTickets').where('role', '==', 'astrologer').where('status', '==', 'open').get(),
+        db.collection('remedyOrders').where('completionStatus', '==', 'pending_review').get(),
+        db.collection('reviews').get()
+      ]);
+      let avgRating = '—';
+      if (reviewSnap.size) {
+        let sum = 0; reviewSnap.forEach(d => sum += (d.data().rating || 0));
+        avgRating = (sum / reviewSnap.size).toFixed(1);
       }
-      listEl.innerHTML = '';
-      snap.forEach(d => {
-        const r = d.data();
-        window.currentRemedyDocs[d.id] = r;
-        const card = document.createElement('div');
-        card.className = 'remedy-card';
-        card.innerHTML = `
-          ${r.photo ? `<img class="photo" src="${r.photo}">` : `<div class="photo empty">No photo</div>`}
-          <div class="body">
-            <div class="name">${r.name || ''}</div>
-            <div class="price">${r.price || ''}</div>
-            <div class="row2">
-              <span onclick="editRemedy('${d.id}')">Edit</span>
-              <span onclick="deleteRemedy('${d.id}')">Delete</span>
-            </div>
-          </div>
-        `;
-        listEl.appendChild(card);
-      });
-    });
-  }
-
-  function cacheRemedies(cat) {
-    const q = query(collection(db, 'remedies'), where('cat', '==', cat));
-    onSnapshot(q, (snap) => {
-      snap.forEach(d => { window.currentRemedyDocs[d.id] = d.data(); });
-    });
-  }
-  cacheRemedies('pooja'); cacheRemedies('spell'); cacheRemedies('gemstone'); cacheRemedies('rudraksh');
-
-  const REMEDY_SEED = [
-    { cat:"pooja", name:"Griha Shanti Pooja", desc:"To bring peace and remove negativity at home", price:"From ₹1,100" },
-    { cat:"pooja", name:"Navgraha Shanti", desc:"A ritual to pacify the nine planets", price:"From ₹2,100" },
-    { cat:"pooja", name:"Rudrabhishek Homa", desc:"A ritual homa for Lord Shiva's blessings", price:"From ₹2,500" },
-    { cat:"pooja", name:"Griha Pravesh Pooja", desc:"Rituals for an auspicious entry into a new home", price:"From ₹1,800" },
-    { cat:"spell", name:"Career Blockage Spell", desc:"For progress in a stalled job or business", price:"From ₹999" },
-    { cat:"spell", name:"Marriage Obstacle Removal", desc:"To clear obstacles blocking marriage", price:"From ₹1,500" },
-    { cat:"spell", name:"Enemy Protection Spell", desc:"Protection from enemies and negative people", price:"From ₹1,200" },
-    { cat:"gemstone", name:"Ruby (Manik)", desc:"For the Sun — confidence and leadership", price:"From ₹2,500" },
-    { cat:"gemstone", name:"Blue Sapphire (Neelam)", desc:"For Saturn — stability in career", price:"From ₹3,500" },
-    { cat:"gemstone", name:"Emerald (Panna)", desc:"For Mercury — intellect and communication", price:"From ₹2,200" },
-    { cat:"gemstone", name:"Pearl (Moti)", desc:"For the Moon — peace of mind", price:"From ₹1,500" },
-    { cat:"rudraksh", name:"1 Mukhi Rudraksh", desc:"For spiritual awareness and Shiva's grace", price:"From ₹5,100" },
-    { cat:"rudraksh", name:"5 Mukhi Rudraksh", desc:"For health and everyday peace of life", price:"From ₹350" },
-    { cat:"rudraksh", name:"7 Mukhi Rudraksh", desc:"For wealth and business growth", price:"From ₹950" },
-    { cat:"rudraksh", name:"11 Mukhi Rudraksh", desc:"For protection and decision-making power", price:"From ₹1,800" },
-  ];
-
-  (async function importSeedRemediesIfEmpty() {
-    const snap = await new Promise(resolve => {
-      const unsub = onSnapshot(collection(db, 'remedies'), s => { unsub(); resolve(s); });
-    });
-    if (!snap.empty) return;
-    for (const item of REMEDY_SEED) {
-      await addDoc(collection(db, 'remedies'), { ...item, photo: null, updatedAt: serverTimestamp() });
+      cards.push(
+        { label: 'Astrologers', value: astroSnap.size, unit: '' },
+        { label: 'Open astrologer tickets', value: astroTixSnap.size, unit: '' },
+        { label: 'Payouts awaiting review', value: payoutSnap.size, unit: '' },
+        { label: 'Average rating', value: avgRating, unit: reviewSnap.size ? `/5 · ${reviewSnap.size} reviews` : '' }
+      );
     }
-  })();
+    if (role === 'super' || role === 'user') {
+      const [userSnap, userTixSnap, remedySnap] = await Promise.all([
+        db.collection('users').get(),
+        db.collection('supportTickets').where('role', '==', 'user').where('status', '==', 'open').get(),
+        db.collection('remedies').get()
+      ]);
+      cards.push(
+        { label: 'Registered users', value: userSnap.size, unit: '' },
+        { label: 'Open help chats', value: userTixSnap.size, unit: '' },
+        { label: 'Remedies in catalog', value: remedySnap.size, unit: '' }
+      );
+    }
+    grid.innerHTML = cards.map(c => `
+      <div class="stat-card">
+        <div class="sc-label">${c.label}</div>
+        <div class="sc-value">${c.value}<span class="unit">${c.unit}</span></div>
+      </div>
+    `).join('');
+  } catch (e) {
+    grid.innerHTML = `<div class="empty">Could not load stats: ${escHtml(e.message)}</div>`;
+  }
 
-  let pendingPhotoBase64 = null;
+  // Recent open tickets across whichever side(s) this admin covers
+  const ticketsPanel = document.getElementById('ov-tickets-panel');
+  ticketsPanel.innerHTML = '<div class="panel-head"><h3>Recently opened tickets</h3></div><div class="loading-row">Loading…</div>';
+  try {
+    const roleFilters = role === 'super' ? ['astrologer', 'user'] : role === 'astro' ? ['astrologer'] : ['user'];
+    const snaps = await Promise.all(roleFilters.map(r => db.collection('supportTickets').where('role', '==', r).where('status', '==', 'open').get()));
+    let rows = [];
+    snaps.forEach(s => s.forEach(d => rows.push({ id: d.id, ...d.data() })));
+    rows.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    rows = rows.slice(0, 6);
+    if (!rows.length) {
+      ticketsPanel.innerHTML = '<div class="panel-head"><h3>Recently opened tickets</h3></div><div class="empty">Nothing waiting on you right now.</div>';
+      return;
+    }
+    ticketsPanel.innerHTML = `
+      <div class="panel-head"><h3>Recently opened tickets</h3></div>
+      <div class="panel-body">
+        <table class="dt"><tbody>
+          ${rows.map(t => `
+            <tr style="cursor:pointer;" onclick="switchPage('${t.role === 'astrologer' ? 'astro-tickets' : 'user-tickets'}')">
+              <td><span class="badge badge-gold">#${t.ticketNumber || '—'}</span></td>
+              <td class="dt-name">${escHtml(t.raisedByName || 'Unknown')}</td>
+              <td style="color:var(--muted);">${escHtml(t.lastMessage || '')}</td>
+              <td style="text-align:right; color:var(--muted); font-size:12px;">${fmtDateTime(t.createdAt)}</td>
+            </tr>
+          `).join('')}
+        </tbody></table>
+      </div>
+    `;
+  } catch (e) {
+    ticketsPanel.innerHTML = `<div class="empty">Could not load tickets: ${escHtml(e.message)}</div>`;
+  }
+};
 
-  document.body.addEventListener('change', (e) => {
-    if (e.target.id !== 'rf-photo') return;
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const targetW = 480, targetH = 270;
-        const canvas = document.createElement('canvas');
-        canvas.width = targetW; canvas.height = targetH;
-        const ctx = canvas.getContext('2d');
-        const srcRatio = img.width / img.height;
-        const targetRatio = targetW / targetH;
-        let sx, sy, sw, sh;
-        if (srcRatio > targetRatio) {
-          sh = img.height; sw = sh * targetRatio; sx = (img.width - sw) / 2; sy = 0;
-        } else {
-          sw = img.width; sh = sw / targetRatio; sx = 0; sy = (img.height - sh) / 2;
-        }
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
-        pendingPhotoBase64 = canvas.toDataURL('image/jpeg', 0.75);
-        document.getElementById('rf-photo-preview').innerHTML = `<img src="${pendingPhotoBase64}" style="width:100%; height:100%; object-fit:cover;">`;
-      };
-      img.src = ev.target.result;
+// ============ ASTROLOGERS ============
+let astroListCache = [];
+let astroListUnsub = null;
+
+PAGE_LOADERS.astrologers = function() {
+  const wrap = document.getElementById('astro-table-wrap');
+  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (astroListUnsub) return renderAstroTable();
+  astroListUnsub = db.collection('astrologers').onSnapshot(snap => {
+    astroListCache = [];
+    snap.forEach(d => astroListCache.push({ id: d.id, ...d.data() }));
+    astroListCache.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    renderAstroTable();
+  }, err => { wrap.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+document.getElementById('astro-search').addEventListener('input', renderAstroTable);
+
+function renderAstroTable() {
+  const wrap = document.getElementById('astro-table-wrap');
+  const q = (document.getElementById('astro-search').value || '').toLowerCase();
+  const rows = astroListCache.filter(a => !q || (a.name || '').toLowerCase().includes(q) || (a.specialty || '').toLowerCase().includes(q));
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="empty">No astrologers match your search.</div>';
+    return;
+  }
+  wrap.innerHTML = `
+    <table class="dt">
+      <thead><tr><th>Astrologer</th><th>Specialty</th><th>Price / min</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(a => `
+          <tr style="cursor:pointer;" onclick="openAstroDrawer('${a.id}')">
+            <td>
+              <div class="flex-row">
+                ${a.profilePhoto ? `<img class="row-photo" src="${a.profilePhoto}">` : `<div class="row-photo-empty">${(a.name || '?').charAt(0).toUpperCase()}</div>`}
+                <div>
+                  <div class="dt-name">${escHtml(a.name || 'Unnamed')}</div>
+                  <div class="dt-sub">${escHtml(a.email || '')}</div>
+                </div>
+              </div>
+            </td>
+            <td>${escHtml(a.specialty || '—')}</td>
+            <td class="dt-num">${a.price ? '₹' + a.price : '—'}</td>
+            <td>${a.isBusy ? '<span class="badge badge-warn">On a session</span>' : '<span class="badge badge-good">Available</span>'}</td>
+            <td style="text-align:right;">
+              <span class="icon-btn" onclick="event.stopPropagation(); openAstroDrawer('${a.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </span>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function openAstroDrawer(id) {
+  const a = astroListCache.find(x => x.id === id);
+  if (!a) return;
+  const body = document.getElementById('astro-drawer-body');
+  body.innerHTML = `
+    <div style="text-align:center; margin-bottom:20px;">
+      ${a.profilePhoto ? `<img src="${a.profilePhoto}" style="width:76px; height:76px; border-radius:50%; object-fit:cover; margin-bottom:10px;">` : `<div style="width:76px; height:76px; border-radius:50%; background:var(--surface-3); color:var(--gold-hi); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700; margin:0 auto 10px;">${(a.name || '?').charAt(0).toUpperCase()}</div>`}
+    </div>
+    <div class="field"><label>Full name</label><input type="text" id="ad-name" value="${escHtml(a.name || '')}"></div>
+    <div class="field"><label>Specialty</label><input type="text" id="ad-specialty" value="${escHtml(a.specialty || '')}"></div>
+    <div class="field"><label>Languages</label><input type="text" id="ad-languages" value="${escHtml(a.languages || '')}"></div>
+    <div class="field"><label>Price per minute (₹)</label><input type="number" id="ad-price" value="${a.price || ''}"></div>
+    <div class="field"><label>About</label><textarea id="ad-about" rows="4">${escHtml(a.about || '')}</textarea></div>
+    <div class="field"><label>Email</label><input type="text" value="${escHtml(a.email || '')}" disabled style="opacity:0.6;"></div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button class="btn btn-gold" style="flex:1;" onclick="saveAstroEdit('${a.id}')">Save changes</button>
+    </div>
+    <div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line);">
+      <div style="font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:10px;">Wallet balance</div>
+      <div style="font-family:'Fraunces',serif; font-size:22px;">₹${(a.walletBalance || 0).toFixed(2)}</div>
+    </div>
+  `;
+  document.getElementById('astro-drawer-overlay').classList.add('show');
+}
+function closeAstroDrawer() { document.getElementById('astro-drawer-overlay').classList.remove('show'); }
+
+async function saveAstroEdit(id) {
+  try {
+    await db.collection('astrologers').doc(id).update({
+      name: document.getElementById('ad-name').value.trim(),
+      specialty: document.getElementById('ad-specialty').value.trim(),
+      languages: document.getElementById('ad-languages').value.trim(),
+      price: document.getElementById('ad-price').value.trim(),
+      about: document.getElementById('ad-about').value.trim(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Astrologer updated.');
+    closeAstroDrawer();
+  } catch (e) { showToast('Could not save: ' + e.message); }
+}
+
+function openHireModal() {
+  ['hf-name','hf-email','hf-password','hf-specialty','hf-languages','hf-price'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('hire-error').textContent = '';
+  document.getElementById('hire-credentials').style.display = 'none';
+  document.getElementById('hire-submit-btn').style.display = 'inline-flex';
+  document.getElementById('hire-overlay').classList.add('show');
+}
+function closeHireModal() { document.getElementById('hire-overlay').classList.remove('show'); }
+
+async function submitHire() {
+  const name = document.getElementById('hf-name').value.trim();
+  const email = document.getElementById('hf-email').value.trim();
+  const password = document.getElementById('hf-password').value;
+  const specialty = document.getElementById('hf-specialty').value.trim();
+  const languages = document.getElementById('hf-languages').value.trim();
+  const price = document.getElementById('hf-price').value.trim();
+  const errEl = document.getElementById('hire-error');
+  errEl.textContent = '';
+  if (!name || !specialty) { errEl.textContent = 'Name and specialty are required.'; return; }
+  if (!email || !password) { errEl.textContent = 'Login email and password are required.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  try {
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    const newUid = cred.user.uid;
+    await secondaryAuth.signOut();
+    await db.collection('astrologers').doc(newUid).set({
+      name, email, specialty, languages, price, about: '',
+      chatOnline: false, callOnline: false, videoOnline: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    document.getElementById('hire-credentials').style.display = 'block';
+    document.getElementById('hire-credentials').innerHTML = `<b>Astrologer added.</b><br>Share these sign-in details:<br>Email: <b>${escHtml(email)}</b><br>Password: <b>${escHtml(password)}</b>`;
+    document.getElementById('hire-submit-btn').style.display = 'none';
+  } catch (e) {
+    errEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+// ============ SUPPORT TICKETS (shared logic for astro + user) ============
+const ticketState = {
+  astrologer: { unsub: null, cache: [], status: 'open', listEl: 'astix-list', segEl: 'astix-seg' },
+  user: { unsub: null, cache: [], status: 'open', listEl: 'usertix-list', segEl: 'usertix-seg' }
+};
+let currentTicketDrawer = null;
+let ticketThreadUnsub = null;
+
+function loadTicketsFor(role) {
+  const st = ticketState[role];
+  const listEl = document.getElementById(st.listEl);
+  listEl.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (st.unsub) st.unsub();
+  st.unsub = db.collection('supportTickets').where('role', '==', role).onSnapshot(snap => {
+    st.cache = [];
+    snap.forEach(d => st.cache.push({ id: d.id, ...d.data() }));
+    st.cache.sort((a, b) => (b.lastMessageAt?.toDate?.() || 0) - (a.lastMessageAt?.toDate?.() || 0));
+    renderTicketList(role);
+  }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+}
+PAGE_LOADERS['astro-tickets'] = () => loadTicketsFor('astrologer');
+PAGE_LOADERS['user-tickets'] = () => loadTicketsFor('user');
+
+function renderTicketList(role) {
+  const st = ticketState[role];
+  const listEl = document.getElementById(st.listEl);
+  const rows = st.cache.filter(t => (t.status || 'open') === st.status);
+  if (!rows.length) {
+    listEl.innerHTML = `<div class="empty">No ${st.status} tickets.</div>`;
+    return;
+  }
+  listEl.innerHTML = `
+    <table class="dt">
+      <thead><tr><th>#</th><th>Raised by</th><th>Last message</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(t => `
+          <tr style="cursor:pointer;" onclick="openTicketDrawer('${role}','${t.id}')">
+            <td><span class="badge badge-gold">#${t.ticketNumber || '—'}</span></td>
+            <td class="dt-name">${escHtml(t.raisedByName || 'Unknown')}</td>
+            <td style="color:var(--muted); max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escHtml(t.lastMessage || '')}</td>
+            <td style="text-align:right; font-size:12px; color:var(--muted);">${fmtDateTime(t.lastMessageAt)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+document.getElementById('astix-seg').querySelectorAll('span').forEach(s => s.addEventListener('click', () => {
+  document.getElementById('astix-seg').querySelectorAll('span').forEach(x => x.classList.remove('active'));
+  s.classList.add('active'); ticketState.astrologer.status = s.dataset.status; renderTicketList('astrologer');
+}));
+document.getElementById('usertix-seg').querySelectorAll('span').forEach(s => s.addEventListener('click', () => {
+  document.getElementById('usertix-seg').querySelectorAll('span').forEach(x => x.classList.remove('active'));
+  s.classList.add('active'); ticketState.user.status = s.dataset.status; renderTicketList('user');
+}));
+
+function openTicketDrawer(role, id) {
+  currentTicketDrawer = { role, id };
+  const t = ticketState[role].cache.find(x => x.id === id);
+  document.getElementById('ticket-drawer-title').textContent = `#${t?.ticketNumber || ''} · ${t?.raisedByName || 'Ticket'}`;
+  document.getElementById('ticket-close-btn').style.display = (t?.status === 'closed') ? 'none' : 'inline-flex';
+  document.getElementById('ticket-reply-text').value = '';
+  const threadEl = document.getElementById('ticket-thread');
+  threadEl.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (ticketThreadUnsub) ticketThreadUnsub();
+  ticketThreadUnsub = db.collection('supportTickets').doc(id).collection('messages').orderBy('sentAt', 'asc').onSnapshot(snap => {
+    if (snap.empty) { threadEl.innerHTML = '<div class="empty" style="padding:24px 0;">No messages yet.</div>'; return; }
+    threadEl.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      const mine = m.senderType === 'admin';
+      return `<div style="align-self:${mine ? 'flex-end' : 'flex-start'}; max-width:80%; background:${mine ? 'rgba(201,165,74,0.14)' : 'var(--surface-2)'}; border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:13px;">${escHtml(m.text || '')}</div>`;
+    }).join('');
+    threadEl.scrollTop = threadEl.scrollHeight;
+  }, err => { threadEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+  document.getElementById('ticket-drawer-overlay').classList.add('show');
+}
+function closeTicketDrawer() {
+  document.getElementById('ticket-drawer-overlay').classList.remove('show');
+  if (ticketThreadUnsub) { ticketThreadUnsub(); ticketThreadUnsub = null; }
+  currentTicketDrawer = null;
+}
+
+async function sendTicketReply() {
+  if (!currentTicketDrawer) return;
+  const text = document.getElementById('ticket-reply-text').value.trim();
+  if (!text) return;
+  document.getElementById('ticket-reply-text').value = '';
+  const { id } = currentTicketDrawer;
+  try {
+    await db.collection('supportTickets').doc(id).collection('messages').add({
+      text, senderType: 'admin', sentAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('supportTickets').doc(id).update({
+      lastMessage: text, lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) { showToast('Could not send: ' + e.message); }
+}
+
+async function closeTicketAsResolved() {
+  if (!currentTicketDrawer) return;
+  if (!confirm('Mark this ticket as closed?')) return;
+  const { id } = currentTicketDrawer;
+  try {
+    await db.collection('supportTickets').doc(id).update({ status: 'closed' });
+    showToast('Ticket closed.');
+    closeTicketDrawer();
+  } catch (e) { showToast('Could not close: ' + e.message); }
+}
+
+// ============ PAYOUTS (remedy completions) ============
+const ASTRO_SHARE_PERCENT = 50;
+let payoutsUnsub = null;
+
+PAGE_LOADERS.payouts = function() {
+  const listEl = document.getElementById('payouts-list');
+  listEl.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (payoutsUnsub) return;
+  payoutsUnsub = db.collection('remedyOrders').where('completionStatus', '==', 'pending_review').onSnapshot(snap => {
+    if (snap.empty) { listEl.innerHTML = '<div class="empty">Nothing waiting for review.</div>'; return; }
+    const rows = []; snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    listEl.innerHTML = `
+      <table class="dt">
+        <thead><tr><th>Remedy</th><th>User</th><th>Astrologer</th><th>Call duration</th><th>Price</th><th>Astrologer gets</th><th></th></tr></thead>
+        <tbody>
+          ${rows.map(o => {
+            const mins = Math.floor((o.callDurationSeconds || 0) / 60);
+            const secs = (o.callDurationSeconds || 0) % 60;
+            const priceNum = parseFloat((o.remedyPrice || '0').replace(/[^0-9.]/g, '')) || 0;
+            const share = (priceNum * ASTRO_SHARE_PERCENT / 100).toFixed(2);
+            return `
+              <tr>
+                <td class="dt-name">${escHtml(o.remedyName || 'Remedy')}</td>
+                <td>${escHtml(o.userName || '—')}</td>
+                <td>${escHtml(o.assignedAstrologerName || '—')}</td>
+                <td class="dt-num">${mins}m ${secs}s</td>
+                <td class="dt-num">${escHtml(o.remedyPrice || '—')}</td>
+                <td class="dt-num" style="color:var(--good); font-weight:600;">₹${share}</td>
+                <td style="text-align:right;"><button class="btn btn-gold" style="padding:7px 14px; font-size:12.5px;" onclick="verifyPayout('${o.id}','${o.assignedAstrologerId}',${priceNum})">Verify &amp; release</button></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+async function verifyPayout(orderId, astrologerId, priceNum) {
+  if (!confirm(`Confirm the call happened and release ${ASTRO_SHARE_PERCENT}% to the astrologer's wallet?`)) return;
+  const share = priceNum * ASTRO_SHARE_PERCENT / 100;
+  try {
+    await db.collection('astrologers').doc(astrologerId).update({ walletBalance: firebase.firestore.FieldValue.increment(share) });
+    await db.collection('remedyOrders').doc(orderId).update({ completionStatus: 'verified', verifiedAt: firebase.firestore.FieldValue.serverTimestamp(), verifiedBy: currentAdmin.uid });
+    showToast('Payout released.');
+  } catch (e) { showToast('Error: ' + e.message); }
+}
+
+// ============ REVIEWS ============
+let reviewsCache = [];
+let reviewsUnsub = null;
+let reviewsFilter = 'all';
+let reviewAstroNames = {};
+
+PAGE_LOADERS.reviews = function() {
+  const listEl = document.getElementById('reviews-list');
+  listEl.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (reviewsUnsub) return renderReviewsList();
+  reviewsUnsub = db.collection('reviews').onSnapshot(async snap => {
+    reviewsCache = [];
+    snap.forEach(d => reviewsCache.push({ id: d.id, ...d.data() }));
+    reviewsCache.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    const astroIds = [...new Set(reviewsCache.map(r => r.astrologerId).filter(Boolean))];
+    for (const aid of astroIds) {
+      if (reviewAstroNames[aid]) continue;
+      try { const s = await db.collection('astrologers').doc(aid).get(); reviewAstroNames[aid] = s.exists ? (s.data().name || 'Astrologer') : 'Astrologer'; }
+      catch (e) { reviewAstroNames[aid] = 'Astrologer'; }
+    }
+    renderReviewsList();
+  }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+document.getElementById('reviews-seg').querySelectorAll('span').forEach(s => s.addEventListener('click', () => {
+  document.getElementById('reviews-seg').querySelectorAll('span').forEach(x => x.classList.remove('active'));
+  s.classList.add('active'); reviewsFilter = s.dataset.star; renderReviewsList();
+}));
+
+function renderReviewsList() {
+  const listEl = document.getElementById('reviews-list');
+  let rows = reviewsCache;
+  if (reviewsFilter !== 'all') rows = rows.filter(r => String(r.rating) === reviewsFilter);
+  if (!rows.length) { listEl.innerHTML = '<div class="empty">No reviews here.</div>'; return; }
+  listEl.innerHTML = `
+    <table class="dt">
+      <thead><tr><th>Rating</th><th>Astrologer</th><th>From</th><th>Review</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td style="color:var(--gold-hi); letter-spacing:1px;">${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</td>
+            <td>${escHtml(reviewAstroNames[r.astrologerId] || '—')}</td>
+            <td>${escHtml(r.userName || 'User')}</td>
+            <td style="max-width:300px; color:var(--muted);">${escHtml(r.description || '—')}</td>
+            <td style="text-align:right;">
+              ${r.hidden
+                ? '<span class="badge badge-bad">Hidden</span>'
+                : `<span class="icon-btn" title="Hide from public profile" onclick="hideReviewAdmin('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.1A9.3 9.3 0 0 1 12 5c5 0 9 4 10 7a12.4 12.4 0 0 1-2.2 3.2M6.5 6.7C4.3 8.1 2.7 10.2 2 12c.6 1.5 2 3.7 4.1 5.3"/></svg></span>`}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function hideReviewAdmin(reviewId) {
+  if (!confirm('Hide this review from the astrologer\'s public profile?')) return;
+  try {
+    await db.collection('reviews').doc(reviewId).update({ hidden: true, hiddenBy: currentAdmin.uid, hiddenAt: firebase.firestore.FieldValue.serverTimestamp() });
+    showToast('Review hidden.');
+  } catch (e) { showToast('Error: ' + e.message); }
+}
+
+// ============ USERS ============
+let userListCache = [];
+let userListUnsub = null;
+
+PAGE_LOADERS.users = function() {
+  const wrap = document.getElementById('user-table-wrap');
+  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (userListUnsub) return renderUserTable();
+  userListUnsub = db.collection('users').onSnapshot(snap => {
+    userListCache = [];
+    snap.forEach(d => userListCache.push({ id: d.id, ...d.data() }));
+    userListCache.sort((a, b) => (b.updatedAt?.toDate?.() || 0) - (a.updatedAt?.toDate?.() || 0));
+    renderUserTable();
+  }, err => { wrap.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+document.getElementById('user-search').addEventListener('input', renderUserTable);
+
+function renderUserTable() {
+  const wrap = document.getElementById('user-table-wrap');
+  const q = (document.getElementById('user-search').value || '').toLowerCase();
+  const rows = userListCache.filter(u => !q || (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q));
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No users match your search.</div>'; return; }
+  wrap.innerHTML = `
+    <table class="dt">
+      <thead><tr><th>User</th><th>Email</th><th>Wallet balance</th><th></th></tr></thead>
+      <tbody>
+        ${rows.map(u => `
+          <tr>
+            <td>
+              <div class="flex-row">
+                ${u.photoURL ? `<img class="row-photo" src="${u.photoURL}">` : `<div class="row-photo-empty">${(u.name || '?').charAt(0).toUpperCase()}</div>`}
+                <div class="dt-name">${escHtml(u.name || 'Guest')}</div>
+              </div>
+            </td>
+            <td style="color:var(--muted);">${escHtml(u.email || '—')}</td>
+            <td class="dt-num">₹${(u.balance || 0).toFixed(2)}</td>
+            <td></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ============ REMEDIES CATALOG ============
+let remedyCache = [];
+let remedyUnsub = null;
+let pendingRemedyPhoto = null;
+
+PAGE_LOADERS.remedies = function() {
+  const wrap = document.getElementById('remedies-wrap');
+  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (remedyUnsub) return renderRemedyTable();
+  remedyUnsub = db.collection('remedies').onSnapshot(snap => {
+    remedyCache = [];
+    snap.forEach(d => remedyCache.push({ id: d.id, ...d.data() }));
+    remedyCache.sort((a, b) => (a.cat || '').localeCompare(b.cat || ''));
+    renderRemedyTable();
+  }, err => { wrap.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+function renderRemedyTable() {
+  const wrap = document.getElementById('remedies-wrap');
+  if (!remedyCache.length) { wrap.innerHTML = '<div class="empty">No remedies yet — add the first one.</div>'; return; }
+  wrap.innerHTML = `
+    <table class="dt">
+      <thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th></th></tr></thead>
+      <tbody>
+        ${remedyCache.map(r => `
+          <tr>
+            <td>${r.photo ? `<img src="${r.photo}" style="width:52px; height:30px; border-radius:5px; object-fit:cover;">` : `<div style="width:52px; height:30px; border-radius:5px; background:var(--surface-3);"></div>`}</td>
+            <td class="dt-name">${escHtml(r.name || '')}</td>
+            <td><span class="badge badge-muted">${escHtml(r.cat || '—')}</span></td>
+            <td class="dt-num">${escHtml(r.price || '—')}</td>
+            <td style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+              <span class="icon-btn" onclick="openRemedyModal('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+              <span class="icon-btn" onclick="deleteRemedy('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m2 0v13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V7"/></svg></span>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function openRemedyModal(id) {
+  pendingRemedyPhoto = null;
+  document.getElementById('rf-photo').value = '';
+  document.getElementById('rf-photo-preview').style.display = 'none';
+  document.getElementById('rf-editing-id').value = id || '';
+  if (id) {
+    const r = remedyCache.find(x => x.id === id);
+    document.getElementById('remedy-modal-title').textContent = 'Edit remedy';
+    document.getElementById('rf-cat').value = r?.cat || '';
+    document.getElementById('rf-name').value = r?.name || '';
+    document.getElementById('rf-desc').value = r?.desc || '';
+    document.getElementById('rf-price').value = r?.price || '';
+    if (r?.photo) { document.getElementById('rf-photo-preview').src = r.photo; document.getElementById('rf-photo-preview').style.display = 'block'; }
+  } else {
+    document.getElementById('remedy-modal-title').textContent = 'Add a remedy';
+    ['rf-cat','rf-name','rf-desc','rf-price'].forEach(i => document.getElementById(i).value = '');
+  }
+  document.getElementById('remedy-overlay').classList.add('show');
+}
+function closeRemedyModal() { document.getElementById('remedy-overlay').classList.remove('show'); }
+
+document.getElementById('rf-photo').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 480; canvas.height = 270;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(480 / img.width, 270 / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, (480 - w) / 2, (270 - h) / 2, w, h);
+      pendingRemedyPhoto = canvas.toDataURL('image/jpeg', 0.75);
+      document.getElementById('rf-photo-preview').src = pendingRemedyPhoto;
+      document.getElementById('rf-photo-preview').style.display = 'block';
     };
-    reader.readAsDataURL(file);
-  });
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
 
-  function openAddRemedyForm() {
-    editingRemedyId = null;
-    pendingPhotoBase64 = null;
-    document.getElementById('remedy-form-title').textContent = 'Add remedy';
-    document.getElementById('rf-cat').value = currentRemedyCat;
-    document.getElementById('rf-name').value = '';
-    document.getElementById('rf-desc').value = '';
-    document.getElementById('rf-price').value = '';
-    document.getElementById('rf-photo').value = '';
-    document.getElementById('rf-photo-preview').innerHTML = 'No photo selected';
-    document.getElementById('rf-error').textContent = '';
-    document.getElementById('remedy-form-overlay').style.display = 'flex';
+async function saveRemedy() {
+  const id = document.getElementById('rf-editing-id').value;
+  const data = {
+    cat: document.getElementById('rf-cat').value.trim(),
+    name: document.getElementById('rf-name').value.trim(),
+    desc: document.getElementById('rf-desc').value.trim(),
+    price: document.getElementById('rf-price').value.trim(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (pendingRemedyPhoto) data.photo = pendingRemedyPhoto;
+  if (!data.name || !data.cat) { showToast('Category and name are required.'); return; }
+  try {
+    if (id) await db.collection('remedies').doc(id).update(data);
+    else await db.collection('remedies').add(data);
+    showToast('Remedy saved.');
+    closeRemedyModal();
+  } catch (e) { showToast('Error: ' + e.message); }
+}
+
+async function deleteRemedy(id) {
+  if (!confirm('Delete this remedy from the catalog?')) return;
+  try { await db.collection('remedies').doc(id).delete(); showToast('Remedy deleted.'); }
+  catch (e) { showToast('Error: ' + e.message); }
+}
+
+// ============ TEAM ============
+let teamCache = [];
+let teamUnsub = null;
+
+PAGE_LOADERS.team = function() {
+  const wrap = document.getElementById('team-wrap');
+  wrap.innerHTML = '<div class="loading-row">Loading…</div>';
+  if (teamUnsub) return renderTeamTable();
+  teamUnsub = db.collection('admins').onSnapshot(snap => {
+    teamCache = [];
+    snap.forEach(d => teamCache.push({ id: d.id, ...d.data() }));
+    teamCache.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    renderTeamTable();
+  }, err => { wrap.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
+};
+
+const ROLE_LABEL = { super: 'Super Admin', astro: 'Astrologer Manager', user: 'User Manager' };
+const ROLE_CLASS = { super: 'super', astro: 'astro', user: 'user' };
+
+function renderTeamTable() {
+  const wrap = document.getElementById('team-wrap');
+  if (!teamCache.length) { wrap.innerHTML = '<div class="empty">No team members yet.</div>'; return; }
+  wrap.innerHTML = `
+    <table class="dt">
+      <thead><tr><th>Name</th><th>Email</th><th>Access</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        ${teamCache.map(m => `
+          <tr>
+            <td class="dt-name">${escHtml(m.name || '—')}</td>
+            <td style="color:var(--muted);">${escHtml(m.email || '—')}</td>
+            <td><span class="role-pill ${ROLE_CLASS[m.role] || ''}">${ROLE_LABEL[m.role] || m.role}</span></td>
+            <td>${m.active === false ? '<span class="badge badge-bad">Deactivated</span>' : '<span class="badge badge-good">Active</span>'}</td>
+            <td style="text-align:right;">
+              ${m.id !== currentAdmin.uid ? `<button class="btn btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="toggleAdminActive('${m.id}', ${m.active !== false})">${m.active === false ? 'Reactivate' : 'Deactivate'}</button>` : '<span style="font-size:12px; color:var(--muted);">You</span>'}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+async function toggleAdminActive(uid, isCurrentlyActive) {
+  const action = isCurrentlyActive ? 'deactivate' : 'reactivate';
+  if (!confirm(`Are you sure you want to ${action} this team member's access?`)) return;
+  try {
+    await db.collection('admins').doc(uid).update({ active: !isCurrentlyActive });
+    showToast(`Team member ${action}d.`);
+  } catch (e) { showToast('Error: ' + e.message); }
+}
+
+function openTeamModal() {
+  ['tf-name','tf-email','tf-password'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('tf-role').value = 'astro';
+  document.getElementById('team-error').textContent = '';
+  document.getElementById('team-credentials').style.display = 'none';
+  document.getElementById('team-submit-btn').style.display = 'inline-flex';
+  document.getElementById('team-overlay').classList.add('show');
+}
+function closeTeamModal() { document.getElementById('team-overlay').classList.remove('show'); }
+
+async function submitTeamMember() {
+  const name = document.getElementById('tf-name').value.trim();
+  const email = document.getElementById('tf-email').value.trim();
+  const password = document.getElementById('tf-password').value;
+  const role = document.getElementById('tf-role').value;
+  const errEl = document.getElementById('team-error');
+  errEl.textContent = '';
+  if (!name || !email || !password) { errEl.textContent = 'Name, email, and password are all required.'; return; }
+  if (password.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+  try {
+    const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    const newUid = cred.user.uid;
+    await secondaryAuth.signOut();
+    await db.collection('admins').doc(newUid).set({
+      name, email, role, active: true,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentAdmin.uid
+    });
+    document.getElementById('team-credentials').style.display = 'block';
+    document.getElementById('team-credentials').innerHTML = `<b>Team member added.</b><br>Share these sign-in details:<br>Email: <b>${escHtml(email)}</b><br>Password: <b>${escHtml(password)}</b>`;
+    document.getElementById('team-submit-btn').style.display = 'none';
+  } catch (e) {
+    errEl.textContent = 'Error: ' + e.message;
   }
+}
 
-  window.editRemedy = function(id) {
-    const r = window.currentRemedyDocs[id];
-    if (!r) return;
-    editingRemedyId = id;
-    pendingPhotoBase64 = r.photo || null;
-    document.getElementById('remedy-form-title').textContent = 'Edit remedy';
-    document.getElementById('rf-cat').value = r.cat || 'pooja';
-    document.getElementById('rf-name').value = r.name || '';
-    document.getElementById('rf-desc').value = r.desc || '';
-    document.getElementById('rf-price').value = r.price || '';
-    document.getElementById('rf-photo').value = '';
-    document.getElementById('rf-photo-preview').innerHTML = r.photo ? `<img src="${r.photo}" style="width:100%; height:100%; object-fit:cover;">` : 'No photo selected';
-    document.getElementById('rf-error').textContent = '';
-    document.getElementById('remedy-form-overlay').style.display = 'flex';
-  };
-
-  window.deleteRemedy = async function(id) {
-    if (!confirm('Delete this remedy?')) return;
-    await deleteDoc(doc(db, 'remedies', id));
-  };
-
-  window.closeRemedyForm = function() {
-    document.getElementById('remedy-form-overlay').style.display = 'none';
-  };
-
-  window.saveRemedy = async function() {
-    const cat = document.getElementById('rf-cat').value;
-    const name = document.getElementById('rf-name').value.trim();
-    const desc = document.getElementById('rf-desc').value.trim();
-    const price = document.getElementById('rf-price').value.trim();
-    if (!name || !desc || !price) {
-      document.getElementById('rf-error').textContent = 'Name, description and price are all required.';
-      return;
-    }
-    if (!pendingPhotoBase64) {
-      document.getElementById('rf-error').textContent = 'A 16:9 photo is required.';
-      return;
-    }
-    const data = { cat, name, desc, price, photo: pendingPhotoBase64, updatedAt: serverTimestamp() };
-    try {
-      if (editingRemedyId) {
-        await updateDoc(doc(db, 'remedies', editingRemedyId), data);
-      } else {
-        await addDoc(collection(db, 'remedies'), data);
-      }
-      closeRemedyForm();
-      loadRemedies(currentRemedyCat);
-    } catch (e) {
-      document.getElementById('rf-error').textContent = 'Error: ' + e.message;
-    }
-  };
-
-  // ================= SUPPORT TICKETS =================
-  let ticketListUnsub = null;
-  let ticketChatUnsub = null;
-
-  window.renderTicketsSection = function(role) {
-    window.currentTicketRole = role;
-    document.getElementById('content').innerHTML = `
-      <div class="toolbar">
-        <div class="cat-tabs" id="ticket-status-tabs">
-          <button class="cat-tab active" data-status="open">Open</button>
-          <button class="cat-tab" data-status="closed">Closed</button>
-        </div>
-      </div>
-      <div id="tickets-list"></div>
-    `;
-    document.querySelectorAll('#ticket-status-tabs .cat-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('#ticket-status-tabs .cat-tab').forEach(b => b.classList.remove('active'));
-        tab.classList.add('active');
-        loadTicketsList(role, tab.dataset.status);
-      });
-    });
-    loadTicketsList(role, 'open');
-  };
-
-  function loadTicketsList(role, status) {
-    const listEl = document.getElementById('tickets-list');
-    if (!listEl) return;
-    listEl.innerHTML = '<div class="empty-state">Loading...</div>';
-    if (ticketListUnsub) ticketListUnsub();
-    const q = query(collection(db, 'supportTickets'), where('role', '==', role), where('status', '==', status));
-    ticketListUnsub = onSnapshot(q, (snap) => {
-      if (snap.empty) {
-        listEl.innerHTML = `<div class="empty-state">No ${status} tickets.</div>`;
-        return;
-      }
-      const rows = [];
-      snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-      rows.sort((a, b) => (b.ticketNumber || 0) - (a.ticketNumber || 0));
-      listEl.innerHTML = rows.map(t => `
-        <div class="remedy-row" style="cursor:pointer; display:block;" onclick="openTicketAdminChat('${t.id}', ${t.ticketNumber}, '${(t.raisedByName||'').replace(/'/g,"\\'")}')">
-          <div style="display:flex; justify-content:space-between;">
-            <span style="font-weight:700; font-size:13.5px;">#${t.ticketNumber} — ${t.raisedByName || 'Unknown'}</span>
-          </div>
-          <div style="font-size:12px; color:var(--dim); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.lastMessage || 'No messages yet'}</div>
-        </div>
-      `).join('');
-    });
-  }
-
-  window.openTicketAdminChat = function(ticketId, ticketNumber, raisedByName) {
-    window.currentAdminTicketId = ticketId;
-    document.getElementById('content').innerHTML = `
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-        <span style="cursor:pointer; font-size:18px; color:var(--brass-hi);" onclick="renderTicketsSection(window.currentTicketRole)">←</span>
-        <div>
-          <div style="font-weight:700; font-size:15px;">Ticket #${ticketNumber}</div>
-          <div style="font-size:11.5px; color:var(--dim);">${raisedByName}</div>
-        </div>
-        <button style="margin-left:auto; padding:7px 14px; border-radius:8px; border:1px solid var(--rose); background:transparent; color:var(--rose); font-size:12px; cursor:pointer;" onclick="closeAdminTicket()">Close Ticket</button>
-      </div>
-      <div id="admin-ticket-body" style="display:flex; flex-direction:column; gap:8px; max-width:520px;"></div>
-      <div style="display:flex; gap:8px; margin-top:16px; max-width:520px;">
-        <input id="admin-ticket-input" type="text" placeholder="Type a reply..." style="flex:1; padding:11px 14px; border-radius:20px; border:1px solid var(--line); background:rgba(255,255,255,0.03); color:var(--parchment); font-size:14px;">
-        <button id="admin-ticket-send" style="width:42px; height:42px; border-radius:50%; border:none; background:var(--brass); color:#1A1305; font-size:16px; cursor:pointer;">➤</button>
-      </div>
-    `;
-    if (ticketChatUnsub) ticketChatUnsub();
-    const q = query(collection(db, 'supportTickets', ticketId, 'messages'), orderBy('sentAt', 'asc'));
-    ticketChatUnsub = onSnapshot(q, (snap) => {
-      const body = document.getElementById('admin-ticket-body');
-      if (!body) return;
-      if (snap.empty) { body.innerHTML = '<div class="empty-state">No messages yet.</div>'; return; }
-      body.innerHTML = '';
-      snap.forEach(d => {
-        const m = d.data();
-        const mine = m.senderType === 'admin';
-        const row = document.createElement('div');
-        row.style.cssText = `align-self:${mine ? 'flex-end' : 'flex-start'}; max-width:75%; padding:10px 14px; border-radius:12px; font-size:13.5px; background:${mine ? 'var(--brass)' : 'var(--card)'}; color:${mine ? '#1A1305' : 'var(--parchment)'}; border:1px solid var(--line);`;
-        row.textContent = m.text || '';
-        body.appendChild(row);
-      });
-      body.scrollTop = body.scrollHeight;
-    });
-    document.getElementById('admin-ticket-send').addEventListener('click', sendAdminTicketMsg);
-    document.getElementById('admin-ticket-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendAdminTicketMsg(); });
-  };
-
-  async function sendAdminTicketMsg() {
-    const input = document.getElementById('admin-ticket-input');
-    const text = input.value.trim();
-    if (!text || !window.currentAdminTicketId) return;
-    input.value = '';
-    await addDoc(collection(db, 'supportTickets', window.currentAdminTicketId, 'messages'), {
-      text, senderType: 'admin', sentAt: serverTimestamp()
-    });
-    await updateDoc(doc(db, 'supportTickets', window.currentAdminTicketId), {
-      lastMessage: text, lastMessageAt: serverTimestamp()
-    });
-  }
-
-  window.closeAdminTicket = async function() {
-    if (!window.currentAdminTicketId) return;
-    if (!confirm('Mark this ticket as closed?')) return;
-    await updateDoc(doc(db, 'supportTickets', window.currentAdminTicketId), { status: 'closed' });
-    await addDoc(collection(db, 'supportTickets', window.currentAdminTicketId, 'messages'), {
-      text: 'This ticket has been closed by admin.', senderType: 'system', sentAt: serverTimestamp()
-    });
-  };
-
-  // ================= ASTROLOGERS (HIRE / MANAGE) =================
-  let astroListUnsub = null;
-  let editingAstroUid = null;
-  let pendingAstroPhoto = null;
-  window.currentAstroDocs = {};
-
-  function renderAstrologersSection() {
-    document.getElementById('content').innerHTML = `
-      <div class="toolbar">
-        <div></div>
-        <div class="add-btn" id="hire-astro-btn">+</div>
-      </div>
-      <div class="astro-grid" id="astro-grid"></div>
-    `;
-    document.getElementById('hire-astro-btn').addEventListener('click', openHireForm);
-    loadAstrologers();
-  }
-
-  function loadAstrologers() {
-    const grid = document.getElementById('astro-grid');
-    grid.innerHTML = '<div class="empty-state">Loading...</div>';
-    if (astroListUnsub) astroListUnsub();
-    astroListUnsub = onSnapshot(collection(db, 'astrologers'), (snap) => {
-      if (snap.empty) {
-        grid.innerHTML = '<div class="empty-state">No astrologers hired yet.</div>';
-        return;
-      }
-      grid.innerHTML = '';
-      snap.forEach(d => {
-        const a = d.data();
-        window.currentAstroDocs[d.id] = a;
-        if (!a.name && !a.specialty) return; // skip bare test/chat-only accounts with no profile set up
-        const card = document.createElement('div');
-        card.className = 'astro-card';
-        card.innerHTML = `
-          ${a.profilePhoto ? `<img class="aphoto" src="${a.profilePhoto}">` : `<div class="aphoto-empty">🧑‍🔮</div>`}
-          <div class="aname">${a.name || 'Unnamed'}</div>
-          <div class="aspec">${a.specialty || ''}</div>
-          <div class="arow2">
-            <span onclick="editAstrologer('${d.id}')">Edit</span>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-      if (!grid.innerHTML) grid.innerHTML = '<div class="empty-state">No astrologers hired yet.</div>';
-    });
-  }
-
-  function openHireForm() {
-    editingAstroUid = null;
-    pendingAstroPhoto = null;
-    document.getElementById('astro-form-title').textContent = 'Hire an Astrologer';
-    document.getElementById('af-photo').value = '';
-    document.getElementById('af-photo-preview').innerHTML = 'No photo';
-    document.getElementById('af-name').value = '';
-    document.getElementById('af-email').value = '';
-    document.getElementById('af-email').disabled = false;
-    document.getElementById('af-password').value = '';
-    document.getElementById('af-password').style.display = 'block';
-    document.getElementById('af-password-label').style.display = 'block';
-    document.getElementById('af-specialty').value = '';
-    document.getElementById('af-languages').value = '';
-    document.getElementById('af-price').value = '';
-    document.getElementById('af-experience').value = '';
-    document.getElementById('af-about').value = '';
-    document.getElementById('af-error').textContent = '';
-    document.getElementById('af-credentials').style.display = 'none';
-    document.getElementById('af-save-btn').textContent = 'Hire Astrologer';
-    document.getElementById('af-save-btn').style.display = 'block';
-    document.getElementById('astro-form-overlay').style.display = 'flex';
-  }
-
-  window.editAstrologer = function(uid) {
-    const a = window.currentAstroDocs[uid];
-    if (!a) return;
-    editingAstroUid = uid;
-    pendingAstroPhoto = a.profilePhoto || null;
-    document.getElementById('astro-form-title').textContent = 'Edit Astrologer';
-    document.getElementById('af-photo').value = '';
-    document.getElementById('af-photo-preview').innerHTML = a.profilePhoto ? `<img src="${a.profilePhoto}" style="width:100%; height:100%; object-fit:cover;">` : 'No photo';
-    document.getElementById('af-name').value = a.name || '';
-    document.getElementById('af-email').value = a.email || '';
-    document.getElementById('af-email').disabled = true; // login email can't be changed here
-    document.getElementById('af-password').style.display = 'none';
-    document.getElementById('af-password-label').style.display = 'none';
-    document.getElementById('af-specialty').value = a.specialty || '';
-    document.getElementById('af-languages').value = a.languages || '';
-    document.getElementById('af-price').value = a.price || '';
-    document.getElementById('af-experience').value = a.experienceYears || '';
-    document.getElementById('af-about').value = a.about || '';
-    document.getElementById('af-error').textContent = '';
-    document.getElementById('af-credentials').style.display = 'none';
-    document.getElementById('af-save-btn').textContent = 'Save Changes';
-    document.getElementById('af-save-btn').style.display = 'block';
-    document.getElementById('astro-form-overlay').style.display = 'flex';
-  };
-
-  window.closeAstroForm = function() {
-    document.getElementById('astro-form-overlay').style.display = 'none';
-  };
-
-  document.getElementById('af-photo').addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const size = 300;
-        const canvas = document.createElement('canvas');
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        const side = Math.min(img.width, img.height);
-        const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
-        ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
-        pendingAstroPhoto = canvas.toDataURL('image/jpeg', 0.8);
-        document.getElementById('af-photo-preview').innerHTML = `<img src="${pendingAstroPhoto}" style="width:100%; height:100%; object-fit:cover;">`;
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-
-  window.saveAstrologer = async function() {
-    const name = document.getElementById('af-name').value.trim();
-    const email = document.getElementById('af-email').value.trim();
-    const password = document.getElementById('af-password').value;
-    const specialty = document.getElementById('af-specialty').value.trim();
-    const languages = document.getElementById('af-languages').value.trim();
-    const price = document.getElementById('af-price').value.trim();
-    const experienceYears = document.getElementById('af-experience').value.trim();
-    const about = document.getElementById('af-about').value.trim();
-    const errEl = document.getElementById('af-error');
-    errEl.textContent = '';
-
-    if (!name || !specialty) {
-      errEl.textContent = 'Name and specialty are required.';
-      return;
-    }
-
-    const profileData = { name, specialty, languages, price, experienceYears, about, updatedAt: serverTimestamp() };
-    if (pendingAstroPhoto) profileData.profilePhoto = pendingAstroPhoto;
-
-    try {
-      if (editingAstroUid) {
-        await updateDoc(doc(db, 'astrologers', editingAstroUid), profileData);
-        closeAstroForm();
-        return;
-      }
-
-      // Hiring a new astrologer: validate login fields first
-      if (!email || !password) {
-        errEl.textContent = 'Login email and password are required to hire a new astrologer.';
-        return;
-      }
-      if (password.length < 6) {
-        errEl.textContent = 'Password must be at least 6 characters.';
-        return;
-      }
-
-      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-      const newUid = cred.user.uid;
-      await signOut(secondaryAuth); // don't leave the secondary session signed in
-
-      await setDoc(doc(db, 'astrologers', newUid), {
-        ...profileData, email, chatOnline: false, callOnline: false, videoOnline: false,
-        createdAt: serverTimestamp()
-      }, { merge: true });
-
-      document.getElementById('af-credentials').style.display = 'block';
-      document.getElementById('af-credentials').innerHTML = `
-        <b>Astrologer hired!</b><br>
-        Share these login details with them:<br>
-        Email: <b>${email}</b><br>
-        Password: <b>${password}</b>
-      `;
-      document.getElementById('af-save-btn').style.display = 'none';
-    } catch (e) {
-      errEl.textContent = 'Error: ' + e.message;
-    }
-  };
-
-  // ================= REMEDY COMPLETIONS (verify call + credit astrologer wallet) =================
-  const ASTROLOGER_SHARE_PERCENT = 50;
-  let remedyCompletionsUnsub = null;
-
-  function renderRemedyCompletionsSection() {
-    document.getElementById('content').innerHTML = `
-      <p style="font-size:12.5px; color:var(--dim); margin:0 0 16px;">Review completed remedy sessions, confirm the call happened, then release ${ASTROLOGER_SHARE_PERCENT}% of the price to the astrologer's wallet.</p>
-      <div id="completions-list"></div>
-    `;
-    const listEl = document.getElementById('completions-list');
-    listEl.innerHTML = '<div class="empty-state">Loading...</div>';
-    if (remedyCompletionsUnsub) remedyCompletionsUnsub();
-    const q = query(collection(db, 'remedyOrders'), where('completionStatus', '==', 'pending_review'));
-    remedyCompletionsUnsub = onSnapshot(q, (snap) => {
-      if (snap.empty) {
-        listEl.innerHTML = '<div class="empty-state">No remedy sessions waiting for review.</div>';
-        return;
-      }
-      const rows = [];
-      snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-      listEl.innerHTML = rows.map(o => {
-        const mins = Math.floor((o.callDurationSeconds || 0) / 60);
-        const secs = (o.callDurationSeconds || 0) % 60;
-        const priceNum = parseFloat((o.remedyPrice || '0').replace(/[^0-9.]/g, '')) || 0;
-        const shareAmt = (priceNum * ASTROLOGER_SHARE_PERCENT / 100).toFixed(2);
-        return `
-          <div class="astro-card" style="text-align:left; margin-bottom:14px;">
-            <div style="font-weight:700; font-size:14px;">${o.remedyName || 'Remedy'}</div>
-            <div style="font-size:12px; color:var(--dim); margin-top:4px;">User: ${o.userName || '-'}</div>
-            <div style="font-size:12px; color:var(--dim);">Astrologer: ${o.assignedAstrologerName || '-'}</div>
-            <div style="font-size:12px; color:var(--dim);">Price: ${o.remedyPrice || '-'}</div>
-            <div style="font-size:12px; color:var(--dim);">Call duration: ${mins}m ${secs}s</div>
-            <div style="font-size:12px; color:var(--teal); margin-top:4px;">Astrologer will receive: ₹${shareAmt}</div>
-            <button class="btn-solid" style="width:100%; margin-top:12px; padding:10px; border-radius:8px;" onclick="verifyRemedyCompletion('${o.id}', '${o.assignedAstrologerId}', ${priceNum})">Verify &amp; Close</button>
-          </div>
-        `;
-      }).join('');
-    });
-  }
-
-  window.verifyRemedyCompletion = async function(orderId, astrologerId, priceNum) {
-    if (!confirm('Confirm the call happened and release payment to the astrologer?')) return;
-    const shareAmt = priceNum * ASTROLOGER_SHARE_PERCENT / 100;
-    try {
-      await updateDoc(doc(db, 'astrologers', astrologerId), {
-        walletBalance: increment(shareAmt)
-      });
-      await updateDoc(doc(db, 'remedyOrders', orderId), {
-        completionStatus: 'verified', verifiedAt: serverTimestamp()
-      });
-    } catch (e) {
-      alert('Error: ' + e.message);
-    }
-  };
 </script>
 
 </body>
