@@ -335,6 +335,65 @@ textarea{ resize:vertical; min-height:80px; }
 .role-pill.astro{ background:rgba(79,156,110,0.14); color:var(--good); }
 .role-pill.user{ background:rgba(120,144,201,0.14); color:#8FA6E0; }
 
+/* ============ MULTI-SELECT DROPDOWN ============ */
+.multiselect{ position:relative; }
+.ms-toggle{
+  width:100%; text-align:left; padding:11px 13px; border-radius:var(--radius-sm); border:1px solid var(--line);
+  background:var(--surface); color:var(--paper); font-size:13.5px; font-family:inherit; cursor:pointer;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.ms-toggle:hover{ border-color:var(--gold-dim); }
+.ms-toggle .ms-placeholder{ color:var(--muted-2); }
+.ms-toggle .ms-chips{ display:flex; flex-wrap:wrap; gap:5px; }
+.ms-chip{ background:rgba(201,165,74,0.14); color:var(--gold-hi); font-size:11.5px; font-weight:600; padding:2px 8px; border-radius:20px; }
+.ms-panel{
+  display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
+  background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-sm);
+  max-height:240px; overflow-y:auto; box-shadow:0 14px 34px rgba(0,0,0,0.35); padding:6px;
+}
+.ms-panel.open{ display:block; }
+.ms-hint{ padding:6px 10px 4px; font-size:11px; color:var(--warn); }
+.ms-option{ display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:6px; font-size:13px; cursor:pointer; color:var(--paper-dim); }
+.ms-option:hover{ background:var(--surface-3); }
+.ms-option input{ width:auto; margin:0; accent-color:var(--gold); }
+.ms-option.disabled{ opacity:0.4; cursor:not-allowed; }
+.ms-option.disabled:hover{ background:none; }
+
+/* ============ AVATAR UPLOAD ============ */
+.avatar-upload{ text-align:center; margin-bottom:20px; }
+.avatar-upload .au-circle{
+  width:84px; height:84px; border-radius:50%; margin:0 auto 8px; position:relative; cursor:pointer;
+  background:var(--surface-3); display:flex; align-items:center; justify-content:center; overflow:hidden;
+  border:2px solid var(--line); color:var(--gold-hi); font-size:28px; font-weight:700;
+}
+.avatar-upload .au-circle img{ width:100%; height:100%; object-fit:cover; }
+.avatar-upload .au-circle .au-overlay{
+  position:absolute; inset:0; background:rgba(10,8,5,0.55); color:#fff; font-size:11px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .15s ease;
+}
+.avatar-upload .au-circle:hover .au-overlay{ opacity:1; }
+.avatar-upload .au-hint{ font-size:11.5px; color:var(--muted); }
+
+/* ============ BAN UI ============ */
+.badge-temp-ban{ background:var(--warn-bg); color:var(--warn); }
+.badge-perma-ban{ background:var(--bad-bg); color:var(--bad); }
+.ban-banner{ border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:16px; font-size:13px; }
+.ban-banner.temp{ background:var(--warn-bg); border:1px solid rgba(201,123,61,0.3); color:var(--warn); }
+.ban-banner.perma{ background:var(--bad-bg); border:1px solid rgba(193,91,84,0.3); color:var(--bad); }
+.chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.chip{ background:var(--surface-3); color:var(--paper-dim); font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:20px; }
+
+.detail-drawer .drawer{ width:640px; }
+.detail-tabpanel{ display:none; }
+.detail-tabpanel.active{ display:block; }
+.hist-item{ padding:11px 12px; border:1px solid var(--line); border-radius:var(--radius-sm); margin-bottom:8px; cursor:pointer; font-size:13px; }
+.hist-item:hover{ background:var(--surface-2); }
+.hist-item .hi-top{ display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:11.5px; margin-bottom:4px; }
+.chat-bubble{ max-width:78%; padding:9px 12px; border-radius:10px; font-size:13px; margin-bottom:8px; }
+.chat-bubble.left{ background:var(--surface-2); border:1px solid var(--line); align-self:flex-start; }
+.chat-bubble.right{ background:rgba(201,165,74,0.14); align-self:flex-end; }
+.chat-bubble .cb-time{ display:block; font-size:10.5px; color:var(--muted); margin-top:4px; }
+
 @media (max-width:920px){
   :root{ --sidebar-w:0px; }
   #sidebar{ transform:translateX(-100%); transition:transform .2s ease; width:250px; }
@@ -538,17 +597,34 @@ textarea{ resize:vertical; min-height:80px; }
       <!-- REVIEWS -->
       <div class="page" id="page-reviews">
         <div class="page-head"><div><div class="ph-sub">What clients are saying, across every astrologer.</div></div></div>
-        <div class="toolbar">
-          <div class="seg" id="reviews-seg">
-            <span class="active" data-star="all">All</span>
-            <span data-star="5">5★</span>
-            <span data-star="4">4★</span>
-            <span data-star="3">3★</span>
-            <span data-star="2">2★</span>
-            <span data-star="1">1★</span>
+
+        <!-- Astrologer-level list -->
+        <div id="reviews-astro-view">
+          <div class="toolbar">
+            <div class="seg" id="reviews-sort-seg">
+              <span class="active" data-sort="desc">Highest rated first</span>
+              <span data-sort="asc">Lowest rated first</span>
+            </div>
           </div>
+          <div class="panel"><div class="panel-body" id="reviews-astro-list"><div class="loading-row">Loading…</div></div></div>
         </div>
-        <div class="panel"><div class="panel-body" id="reviews-list"><div class="loading-row">Loading…</div></div></div>
+
+        <!-- Drill-down: one astrologer's reviews -->
+        <div id="reviews-drill-view" style="display:none;">
+          <button class="btn btn-ghost" style="margin-bottom:14px;" onclick="closeReviewsDrill()">&larr; Back to astrologers</button>
+          <div class="serif" id="reviews-drill-title" style="font-size:19px; margin-bottom:12px;"></div>
+          <div class="toolbar">
+            <div class="seg" id="reviews-seg">
+              <span class="active" data-star="all">All</span>
+              <span data-star="5">5★</span>
+              <span data-star="4">4★</span>
+              <span data-star="3">3★</span>
+              <span data-star="2">2★</span>
+              <span data-star="1">1★</span>
+            </div>
+          </div>
+          <div class="panel"><div class="panel-body" id="reviews-list"></div></div>
+        </div>
       </div>
 
       <!-- USERS -->
@@ -612,7 +688,7 @@ textarea{ resize:vertical; min-height:80px; }
 </div>
 
 <!-- ASTROLOGER DRAWER -->
-<div class="drawer-overlay" id="astro-drawer-overlay">
+<div class="drawer-overlay detail-drawer" id="astro-drawer-overlay">
   <div class="drawer">
     <div class="modal-head">
       <h3>Astrologer</h3>
@@ -621,6 +697,62 @@ textarea{ resize:vertical; min-height:80px; }
       </div>
     </div>
     <div class="modal-body" id="astro-drawer-body"></div>
+  </div>
+</div>
+
+<!-- USER DRAWER -->
+<div class="drawer-overlay detail-drawer" id="user-drawer-overlay">
+  <div class="drawer">
+    <div class="modal-head">
+      <h3>User</h3>
+      <div class="modal-close" onclick="closeUserDrawer()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body" id="user-drawer-body"></div>
+  </div>
+</div>
+
+<!-- BAN MODAL (temp/permanent, shared by astrologers + users) -->
+<div class="overlay" id="ban-overlay">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <h3 id="ban-modal-title">Ban</h3>
+      <div class="modal-close" onclick="closeBanModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="ban-duration-field" class="field">
+        <label>Duration</label>
+        <select id="ban-duration">
+          <option value="1">1 day</option>
+          <option value="3">3 days</option>
+          <option value="7">7 days</option>
+          <option value="30">30 days</option>
+        </select>
+      </div>
+      <div class="field"><label>Reason (optional, shown internally only)</label><textarea id="ban-reason" rows="3" placeholder="Why is this account being banned…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeBanModal()">Cancel</button>
+      <button class="btn btn-danger-ghost" id="ban-submit-btn" onclick="submitBan()">Ban</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT TRANSCRIPT MODAL -->
+<div class="overlay" id="chat-transcript-overlay">
+  <div class="modal wide">
+    <div class="modal-head">
+      <h3 id="chat-transcript-title">Chat</h3>
+      <div class="modal-close" onclick="closeChatTranscript()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="chat-transcript-body" style="display:flex; flex-direction:column; max-height:60vh; overflow-y:auto;"></div>
+    </div>
   </div>
 </div>
 
@@ -677,11 +809,20 @@ textarea{ resize:vertical; min-height:80px; }
     </div>
     <div class="modal-body">
       <div id="hire-credentials" style="display:none; background:var(--good-bg); border:1px solid rgba(79,156,110,0.3); color:var(--good); padding:12px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:16px;"></div>
+      <div class="avatar-upload">
+        <div class="au-circle" id="hf-photo-circle" onclick="document.getElementById('hf-photo-input').click()">
+          <span id="hf-photo-placeholder">?</span>
+          <img id="hf-photo-img" style="display:none;">
+          <div class="au-overlay">Change photo</div>
+        </div>
+        <div class="au-hint">Profile photo (optional)</div>
+        <input type="file" id="hf-photo-input" accept="image/*" style="display:none;">
+      </div>
       <div class="field"><label>Full name</label><input type="text" id="hf-name" placeholder="Priya Sharma"></div>
       <div class="field"><label>Login email</label><input type="email" id="hf-email" placeholder="priya@aangan.app"></div>
       <div class="field"><label>Temporary password</label><input type="text" id="hf-password" placeholder="At least 6 characters"></div>
-      <div class="field"><label>Specialty</label><input type="text" id="hf-specialty" placeholder="Vedic Astrology, Tarot, Numerology…"></div>
-      <div class="field"><label>Languages</label><input type="text" id="hf-languages" placeholder="Hindi, English"></div>
+      <div class="field"><label>Specialty</label><div class="multiselect" id="hf-specialty-ms"></div></div>
+      <div class="field"><label>Languages</label><div class="multiselect" id="hf-languages-ms"></div></div>
       <div class="field"><label>Price per minute (₹)</label><input type="number" id="hf-price" placeholder="15"></div>
       <div id="hire-error" style="color:var(--bad); font-size:12.5px; margin-top:4px;"></div>
     </div>
@@ -949,6 +1090,190 @@ function fmtDateTime(ts) {
   return ts.toDate().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+// ---------------- Ban status helpers (shared by astrologers + users) ----------------
+// banStatus: 'none' | 'temp' | 'permanent'. A temp ban whose banUntil has passed is treated as
+// unbanned in the UI without clearing the Firestore field (the other two apps read it too).
+function getBanState(entity) {
+  entity = entity || {};
+  const status = entity.banStatus || 'none';
+  if (status === 'permanent') return { banned: true, temp: false, expired: false };
+  if (status === 'temp') {
+    const until = entity.banUntil && entity.banUntil.toDate ? entity.banUntil.toDate() : null;
+    const expired = !until || until.getTime() <= Date.now();
+    return { banned: !expired, temp: true, expired, until };
+  }
+  return { banned: false, temp: false, expired: false };
+}
+function banBadgeHtml(entity) {
+  const bs = getBanState(entity);
+  if (!bs.banned) return '';
+  if (bs.temp) return `<span class="badge badge-temp-ban" title="Temporarily banned until ${bs.until ? bs.until.toLocaleString('en-IN') : ''}">🚫 Temp Banned</span>`;
+  return `<span class="badge badge-perma-ban">⛔ Banned</span>`;
+}
+function banBannerHtml(entity) {
+  const bs = getBanState(entity);
+  if (!bs.banned) return '';
+  if (bs.temp) {
+    const remainMs = bs.until ? bs.until.getTime() - Date.now() : 0;
+    const remainDays = Math.max(1, Math.ceil(remainMs / 86400000));
+    return `<div class="ban-banner temp">🚫 <b>Temporarily banned</b> — ${remainDays} day${remainDays === 1 ? '' : 's'} remaining (until ${bs.until ? bs.until.toLocaleString('en-IN') : '—'}).${entity.banReason ? ' Reason: ' + escHtml(entity.banReason) : ''}</div>`;
+  }
+  return `<div class="ban-banner perma">⛔ <b>Permanently banned</b>.${entity.banReason ? ' Reason: ' + escHtml(entity.banReason) : ''}</div>`;
+}
+
+// ---------------- Ban / unban actions (shared modal for astrologers + users) ----------------
+// kind: 'astrologers' | 'users' — the Firestore collection; area: 'astrologer' | 'user' — for logActivity.
+let banTarget = null; // { kind, id, name, area, mode: 'temp'|'permanent' }
+
+function openBanModal(kind, id, name, area, mode) {
+  banTarget = { kind, id, name, area, mode };
+  document.getElementById('ban-modal-title').textContent = mode === 'temp' ? `Temporarily ban ${name}` : `Permanently ban ${name}`;
+  document.getElementById('ban-duration-field').style.display = mode === 'temp' ? 'block' : 'none';
+  document.getElementById('ban-duration').value = '7';
+  document.getElementById('ban-reason').value = '';
+  document.getElementById('ban-submit-btn').textContent = mode === 'temp' ? 'Ban temporarily' : 'Ban permanently';
+  document.getElementById('ban-overlay').classList.add('show');
+}
+function closeBanModal() { document.getElementById('ban-overlay').classList.remove('show'); banTarget = null; }
+
+async function submitBan() {
+  if (!banTarget) return;
+  const { kind, id, name, area, mode } = banTarget;
+  const reason = document.getElementById('ban-reason').value.trim();
+  const data = {
+    banStatus: mode,
+    banReason: reason,
+    bannedBy: currentAdmin.uid, bannedByName: currentAdmin.name,
+    bannedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (mode === 'temp') {
+    const days = parseInt(document.getElementById('ban-duration').value, 10) || 7;
+    const until = new Date(Date.now() + days * 86400000);
+    data.banUntil = firebase.firestore.Timestamp.fromDate(until);
+  } else {
+    data.banUntil = null;
+  }
+  try {
+    await db.collection(kind).doc(id).update(data);
+    logActivity(mode === 'temp' ? (area === 'astrologer' ? 'Temporarily banned astrologer' : 'Temporarily banned user') : (area === 'astrologer' ? 'Permanently banned astrologer' : 'Permanently banned user'), name, area, reason || undefined);
+    showToast(mode === 'temp' ? 'Account temporarily banned.' : 'Account permanently banned.');
+    closeBanModal();
+  } catch (e) { showToast('Could not ban: ' + e.message); }
+}
+
+async function unbanEntity(kind, id, name, area) {
+  if (!(await confirmDialog(`Unban ${name}? They will be able to operate normally again.`, { okLabel: 'Unban' }))) return;
+  try {
+    await db.collection(kind).doc(id).update({ banStatus: 'none', banUntil: null, banReason: '' });
+    logActivity(area === 'astrologer' ? 'Unbanned astrologer' : 'Unbanned user', name, area);
+    showToast('Account unbanned.');
+  } catch (e) { showToast('Could not unban: ' + e.message); }
+}
+
+// ---------------- Generic multi-select checkbox dropdown ----------------
+// createMultiSelect(containerEl, options, selectedCsv, maxSelect) renders a toggle button + panel
+// into containerEl and returns { getValue(): csv string, setValue(csv) }.
+const SPECIALTY_OPTIONS = ['Vedic Astrology','Tarot Reading','Face Reading','Palmistry','KP Astrology','Life Coaching','Vastu Shastra','Lal Kitab','Numerology','Nadi Astrology','Prashna (Horary) Astrology','Western Astrology','Kundli Milan (Matchmaking)','Reiki Healing','Feng Shui','Gemology (Ratna Shastra)'];
+const LANGUAGE_OPTIONS = ['Hindi','English','Bengali','Marathi','Telugu','Tamil','Gujarati','Urdu','Kannada','Odia','Malayalam','Punjabi','Assamese','Bhojpuri','Rajasthani','Haryanvi'];
+
+function createMultiSelect(containerEl, options, selectedCsv, maxSelect) {
+  maxSelect = maxSelect || 5;
+  let selected = (selectedCsv || '').split(',').map(s => s.trim()).filter(Boolean);
+  // Keep any pre-existing value that isn't in the known option list, so we never silently drop data.
+  const extra = selected.filter(s => !options.includes(s));
+  const uid = 'ms' + Math.random().toString(36).slice(2, 9);
+
+  containerEl.innerHTML = `
+    <button type="button" class="ms-toggle" id="${uid}-toggle"></button>
+    <div class="ms-panel" id="${uid}-panel">
+      <div class="ms-hint" id="${uid}-hint" style="display:none;">Max ${maxSelect} selected</div>
+      ${options.map((opt, i) => `
+        <label class="ms-option" id="${uid}-opt-${i}">
+          <input type="checkbox" data-opt="${escHtml(opt)}">
+          <span>${escHtml(opt)}</span>
+        </label>
+      `).join('')}
+    </div>
+  `;
+
+  const toggleBtn = containerEl.querySelector(`#${uid}-toggle`);
+  const panel = containerEl.querySelector(`#${uid}-panel`);
+  const hint = containerEl.querySelector(`#${uid}-hint`);
+  const checkboxes = Array.from(containerEl.querySelectorAll(`#${uid}-panel input[type=checkbox]`));
+
+  function renderToggle() {
+    if (!selected.length) {
+      toggleBtn.innerHTML = `<span class="ms-placeholder">Select…</span><span>▾</span>`;
+    } else {
+      toggleBtn.innerHTML = `<span class="ms-chips">${selected.map(s => `<span class="ms-chip">${escHtml(s)}</span>`).join('')}</span><span>▾</span>`;
+    }
+  }
+  function renderState() {
+    checkboxes.forEach(cb => {
+      const opt = cb.dataset.opt;
+      cb.checked = selected.includes(opt);
+      const atCap = selected.length >= maxSelect && !cb.checked;
+      cb.disabled = atCap;
+      cb.closest('.ms-option').classList.toggle('disabled', atCap);
+    });
+    hint.style.display = selected.length >= maxSelect ? 'block' : 'none';
+    renderToggle();
+  }
+  checkboxes.forEach(cb => cb.addEventListener('change', () => {
+    const opt = cb.dataset.opt;
+    if (cb.checked) {
+      if (selected.length >= maxSelect) { cb.checked = false; return; }
+      selected.push(opt);
+    } else {
+      selected = selected.filter(s => s !== opt);
+    }
+    renderState();
+  }));
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.ms-panel.open').forEach(p => { if (p !== panel) p.classList.remove('open'); });
+    panel.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!containerEl.contains(e.target)) panel.classList.remove('open');
+  });
+
+  renderState();
+
+  return {
+    getValue() { return selected.concat(extra).join(', '); },
+    setValue(csv) {
+      const extra2 = (csv || '').split(',').map(s => s.trim()).filter(Boolean);
+      selected = extra2.filter(s => options.includes(s));
+      renderState();
+    }
+  };
+}
+
+// ---------------- Square/circle photo upload helper (mirrors the rf-photo remedy pattern) ----------------
+// Reads a chosen image file, cover-fits it into a size x size canvas, and calls onReady(dataUrl).
+function setupCirclePhotoUpload(inputEl, size, onReady) {
+  inputEl.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(size / img.width, size / img.height);
+        const w = img.width * scale, h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        onReady(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // ---------------- Activity log ----------------
 // area: 'astrologer' | 'user' | 'team' — decides who can see the entry.
 function logActivity(action, target, area, extra) {
@@ -1127,7 +1452,7 @@ function renderAstroTable() {
             </td>
             <td>${escHtml(a.specialty || '—')}</td>
             <td class="dt-num">${a.price ? '₹' + a.price : '—'}</td>
-            <td>${a.isBusy ? '<span class="badge badge-warn">On a session</span>' : '<span class="badge badge-good">Available</span>'}</td>
+            <td>${a.isBusy ? '<span class="badge badge-warn">On a session</span>' : '<span class="badge badge-good">Available</span>'} ${banBadgeHtml(a)}</td>
             <td style="text-align:right;">
               <span class="icon-btn" onclick="event.stopPropagation(); openAstroDrawer('${a.id}')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
@@ -1140,28 +1465,207 @@ function renderAstroTable() {
   `;
 }
 
+// ---------------- Shared detail-drawer scaffolding (used by both astrologers and users) ----------------
+let adEditPhoto = null;   // pending base64 photo for the astrologer/user currently open in a detail drawer
+let adSpecialtyMs = null; // multiselect instance (astrologer only)
+let adLanguagesMs = null; // multiselect instance (astrologer only)
+
+function detailAvatarUploadHtml(entity, inputId, imgId, phId) {
+  const initial = (entity.name || '?').charAt(0).toUpperCase();
+  return `
+    <div class="avatar-upload">
+      <div class="au-circle" onclick="document.getElementById('${inputId}').click()">
+        ${entity.profilePhoto || entity.photoURL ? `<img id="${imgId}" src="${entity.profilePhoto || entity.photoURL}">` : `<span id="${phId}">${initial}</span><img id="${imgId}" style="display:none;">`}
+        <div class="au-overlay">Change photo</div>
+      </div>
+      <div class="au-hint">Click photo to change</div>
+      <input type="file" id="${inputId}" accept="image/*" style="display:none;">
+    </div>
+  `;
+}
+
+function tabsHtml(prefix, tabs) {
+  return `<div class="tabs2" id="${prefix}-tabs">${tabs.map((t, i) => `<span class="${i === 0 ? 'active' : ''}" data-tab="${t.key}">${t.label}</span>`).join('')}</div>` +
+    tabs.map((t, i) => `<div class="detail-tabpanel ${i === 0 ? 'active' : ''}" id="${prefix}-panel-${t.key}"></div>`).join('');
+}
+function wireTabs(prefix, onSwitch) {
+  document.querySelectorAll(`#${prefix}-tabs span`).forEach(s => s.addEventListener('click', () => {
+    document.querySelectorAll(`#${prefix}-tabs span`).forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    document.querySelectorAll(`[id^="${prefix}-panel-"]`).forEach(p => p.classList.remove('active'));
+    document.getElementById(`${prefix}-panel-${s.dataset.tab}`).classList.add('active');
+    if (onSwitch) onSwitch(s.dataset.tab);
+  }));
+}
+
+function banControlsHtml(kind, id, name, area, entity) {
+  const bs = getBanState(entity);
+  return `
+    <div style="margin-top:24px; padding-top:18px; border-top:1px solid var(--line);">
+      <div style="font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:10px;">Account access</div>
+      ${banBannerHtml(entity)}
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${bs.banned
+          ? `<button class="btn btn-ghost" onclick="unbanEntity('${kind}','${id}','${escHtml(name).replace(/'/g,"&#39;")}','${area}')">Unban</button>`
+          : `
+            <button class="btn btn-ghost" onclick="openBanModal('${kind}','${id}','${escHtml(name).replace(/'/g,"&#39;")}','${area}','temp')">Temporary ban</button>
+            <button class="btn btn-danger-ghost" onclick="openPermanentBan('${kind}','${id}','${escHtml(name).replace(/'/g,"&#39;")}','${area}')">Permanent ban</button>
+          `}
+      </div>
+      <p style="font-size:11.5px; color:var(--muted); margin:10px 0 0;">Banning only marks the account — it does not delete or hide any of this person's history.</p>
+    </div>
+  `;
+}
+async function openPermanentBan(kind, id, name, area) {
+  if (!(await confirmDialog(`Permanently ban ${name}? This should only be used for serious or repeated violations.`, { danger: true, okLabel: 'Permanently ban' }))) return;
+  openBanModal(kind, id, name, area, 'permanent');
+}
+
+// ---------------- History loaders shared by astrologer + user detail views ----------------
+async function loadTicketsForEntity(entityId, role, panelEl) {
+  panelEl.innerHTML = skeletonBlock();
+  try {
+    const snap = await db.collection('supportTickets').where('role', '==', role).where(role === 'astrologer' ? 'astrologerId' : 'userId', '==', entityId).get();
+    const rows = []; snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    rows.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    if (!rows.length) { panelEl.innerHTML = '<div class="empty">No support tickets from this account.</div>'; return; }
+    panelEl.innerHTML = rows.map(t => `
+      <div class="hist-item" onclick="openTicketDrawer('${role}','${t.id}')">
+        <div class="hi-top"><span>#${t.ticketNumber || '—'} · ${fmtDateTime(t.createdAt)}</span><span>${t.status === 'closed' ? (t.resolutionStatus === 'resolved' ? '✅ Resolved' : '⚠️ Closed') : '🟡 Open'}</span></div>
+        <div style="color:var(--muted);">${escHtml(t.lastMessage || '—')}</div>
+      </div>
+    `).join('');
+  } catch (e) { panelEl.innerHTML = `<div class="empty">Could not load tickets: ${escHtml(e.message)}</div>`; }
+}
+
+async function loadReviewsForAstrologer(astroId, panelEl) {
+  panelEl.innerHTML = skeletonBlock();
+  try {
+    const snap = await db.collection('reviews').where('astrologerId', '==', astroId).get();
+    const rows = []; snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    rows.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    if (!rows.length) { panelEl.innerHTML = '<div class="empty">No reviews yet.</div>'; return; }
+    panelEl.innerHTML = rows.map(r => `
+      <div class="hist-item" style="cursor:default;">
+        <div class="hi-top"><span style="color:var(--gold-hi); letter-spacing:1px;">${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</span><span>${fmtDateTime(r.createdAt)}</span></div>
+        <div style="color:var(--muted);">${escHtml(r.description || '—')} <span style="color:var(--muted-2);">— ${escHtml(r.userName || 'User')}</span></div>
+        ${r.hidden ? '<span class="badge badge-bad" style="margin-top:6px;">Hidden</span>' : ''}
+      </div>
+    `).join('');
+  } catch (e) { panelEl.innerHTML = `<div class="empty">Could not load reviews: ${escHtml(e.message)}</div>`; }
+}
+
+async function loadRemedyOrdersForEntity(entityId, field, panelEl) {
+  panelEl.innerHTML = skeletonBlock();
+  try {
+    const snap = await db.collection('remedyOrders').where(field, '==', entityId).get();
+    const rows = []; snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    rows.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+    if (!rows.length) { panelEl.innerHTML = '<div class="empty">No remedy orders found.</div>'; return; }
+    panelEl.innerHTML = rows.map(o => `
+      <div class="hist-item" style="cursor:default;">
+        <div class="hi-top"><span>${escHtml(o.remedyName || 'Remedy')}</span><span>${fmtDateTime(o.createdAt)}</span></div>
+        <div style="color:var(--muted);">${escHtml(o.remedyPrice || '—')} · ${escHtml(o.completionStatus || '—')}</div>
+      </div>
+    `).join('');
+  } catch (e) { panelEl.innerHTML = `<div class="empty">Could not load remedy orders: ${escHtml(e.message)}</div>`; }
+}
+
+// Chats tab: no dedicated user<->astrologer chat-thread collection was found in this codebase
+// (only supportTickets/{id}/messages exists). We try a couple of plausible collection names so this
+// is ready to light up if one exists with slightly different naming, and fall back to an empty state.
+async function loadChatsForEntity(entityId, field, panelEl, onOpenChat) {
+  panelEl.innerHTML = skeletonBlock();
+  const candidates = ['chats', 'chatThreads', 'conversations'];
+  for (const coll of candidates) {
+    try {
+      const snap = await db.collection(coll).where(field, '==', entityId).limit(50).get();
+      if (!snap.empty) {
+        const rows = []; snap.forEach(d => rows.push({ id: d.id, coll, ...d.data() }));
+        panelEl.innerHTML = rows.map(c => `
+          <div class="hist-item" onclick='window.__openChatFromHistory(${JSON.stringify(c.coll)}, ${JSON.stringify(c.id)})'>
+            <div class="hi-top"><span>${escHtml(c.otherPartyName || c.userName || c.astrologerName || 'Conversation')}</span><span>${fmtDateTime(c.lastMessageAt || c.updatedAt || c.createdAt)}</span></div>
+            <div style="color:var(--muted);">${escHtml(c.lastMessage || '')}</div>
+          </div>
+        `).join('');
+        window.__openChatFromHistory = onOpenChat;
+        return;
+      }
+    } catch (e) { /* collection doesn't exist or query not supported — try the next candidate */ }
+  }
+  panelEl.innerHTML = '<div class="empty">No chat records found.</div>';
+}
+async function openChatTranscript(coll, chatId, titleName) {
+  document.getElementById('chat-transcript-title').textContent = titleName || 'Chat';
+  const body = document.getElementById('chat-transcript-body');
+  body.innerHTML = skeletonBlock();
+  document.getElementById('chat-transcript-overlay').classList.add('show');
+  try {
+    const snap = await db.collection(coll).doc(chatId).collection('messages').orderBy('sentAt', 'asc').get();
+    if (snap.empty) { body.innerHTML = '<div class="empty">No messages in this chat.</div>'; return; }
+    body.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      const mine = m.senderRole === 'astrologer' || m.senderType === 'astrologer';
+      return `<div class="chat-bubble ${mine ? 'right' : 'left'}">${escHtml(m.text || '')}<span class="cb-time">${fmtDateTime(m.sentAt)}</span></div>`;
+    }).join('');
+  } catch (e) { body.innerHTML = `<div class="empty">Could not load transcript: ${escHtml(e.message)}</div>`; }
+}
+function closeChatTranscript() { document.getElementById('chat-transcript-overlay').classList.remove('show'); }
+
 function openAstroDrawer(id) {
   const a = astroListCache.find(x => x.id === id);
   if (!a) return;
+  adEditPhoto = null;
   const body = document.getElementById('astro-drawer-body');
   body.innerHTML = `
-    <div style="text-align:center; margin-bottom:20px;">
-      ${a.profilePhoto ? `<img src="${a.profilePhoto}" style="width:76px; height:76px; border-radius:50%; object-fit:cover; margin-bottom:10px;">` : `<div style="width:76px; height:76px; border-radius:50%; background:var(--surface-3); color:var(--gold-hi); display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700; margin:0 auto 10px;">${(a.name || '?').charAt(0).toUpperCase()}</div>`}
-    </div>
+    ${detailAvatarUploadHtml(a, 'ad-photo-input', 'ad-photo-img', 'ad-photo-ph')}
+    ${banBannerHtml(a)}
+    ${tabsHtml('ad', [
+      { key: 'profile', label: 'Profile' },
+      { key: 'tickets', label: 'Tickets' },
+      { key: 'reviews', label: 'Reviews' },
+      { key: 'remedies', label: 'Remedy orders' },
+      { key: 'chats', label: 'Chats' }
+    ])}
+  `;
+  const profilePanel = document.getElementById('ad-panel-profile');
+  profilePanel.innerHTML = `
     <div class="field"><label>Full name</label><input type="text" id="ad-name" value="${escHtml(a.name || '')}"></div>
-    <div class="field"><label>Specialty</label><input type="text" id="ad-specialty" value="${escHtml(a.specialty || '')}"></div>
-    <div class="field"><label>Languages</label><input type="text" id="ad-languages" value="${escHtml(a.languages || '')}"></div>
+    <div class="field"><label>Specialty</label><div class="multiselect" id="ad-specialty-ms"></div></div>
+    <div class="field"><label>Languages</label><div class="multiselect" id="ad-languages-ms"></div></div>
     <div class="field"><label>Price per minute (₹)</label><input type="number" id="ad-price" value="${a.price || ''}"></div>
     <div class="field"><label>About</label><textarea id="ad-about" rows="4">${escHtml(a.about || '')}</textarea></div>
     <div class="field"><label>Email</label><input type="text" value="${escHtml(a.email || '')}" disabled style="opacity:0.6;"></div>
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button class="btn btn-gold" style="flex:1;" onclick="saveAstroEdit('${a.id}')">Save changes</button>
     </div>
-    <div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--line);">
+    <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--line);">
       <div style="font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:10px;">Wallet balance</div>
       <div style="font-family:'Fraunces',serif; font-size:22px;">₹${(a.walletBalance || 0).toFixed(2)}</div>
     </div>
+    ${banControlsHtml('astrologers', a.id, a.name || 'this astrologer', 'astrologer', a)}
   `;
+  adSpecialtyMs = createMultiSelect(document.getElementById('ad-specialty-ms'), SPECIALTY_OPTIONS, a.specialty || '', 5);
+  adLanguagesMs = createMultiSelect(document.getElementById('ad-languages-ms'), LANGUAGE_OPTIONS, a.languages || '', 5);
+  setupCirclePhotoUpload(document.getElementById('ad-photo-input'), 300, (dataUrl) => {
+    adEditPhoto = dataUrl;
+    const img = document.getElementById('ad-photo-img');
+    img.src = dataUrl; img.style.display = 'block';
+    const ph = document.getElementById('ad-photo-ph');
+    if (ph) ph.style.display = 'none';
+  });
+
+  let loadedTickets = false, loadedReviews = false, loadedRemedies = false, loadedChats = false;
+  loadTicketsForEntity(a.id, 'astrologer', document.getElementById('ad-panel-tickets'));
+  wireTabs('ad', (tab) => {
+    if (tab === 'reviews' && !loadedReviews) { loadedReviews = true; loadReviewsForAstrologer(a.id, document.getElementById('ad-panel-reviews')); }
+    if (tab === 'remedies' && !loadedRemedies) { loadedRemedies = true; loadRemedyOrdersForEntity(a.id, 'assignedAstrologerId', document.getElementById('ad-panel-remedies')); }
+    if (tab === 'chats' && !loadedChats) {
+      loadedChats = true;
+      loadChatsForEntity(a.id, 'astrologerId', document.getElementById('ad-panel-chats'), (coll, chatId) => openChatTranscript(coll, chatId, a.name));
+    }
+  });
+
   document.getElementById('astro-drawer-overlay').classList.add('show');
 }
 function closeAstroDrawer() { document.getElementById('astro-drawer-overlay').classList.remove('show'); }
@@ -1169,25 +1673,45 @@ function closeAstroDrawer() { document.getElementById('astro-drawer-overlay').cl
 async function saveAstroEdit(id) {
   const name = document.getElementById('ad-name').value.trim();
   try {
-    await db.collection('astrologers').doc(id).update({
+    const data = {
       name,
-      specialty: document.getElementById('ad-specialty').value.trim(),
-      languages: document.getElementById('ad-languages').value.trim(),
+      specialty: adSpecialtyMs ? adSpecialtyMs.getValue() : '',
+      languages: adLanguagesMs ? adLanguagesMs.getValue() : '',
       price: document.getElementById('ad-price').value.trim(),
       about: document.getElementById('ad-about').value.trim(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    if (adEditPhoto) data.profilePhoto = adEditPhoto;
+    await db.collection('astrologers').doc(id).update(data);
     logActivity('Updated astrologer profile', name, 'astrologer');
     showToast('Astrologer updated.');
     closeAstroDrawer();
   } catch (e) { showToast('Could not save: ' + e.message); }
 }
 
+let pendingHirePhoto = null;
+let hireSpecialtyMs = null;
+let hireLanguagesMs = null;
+
+setupCirclePhotoUpload(document.getElementById('hf-photo-input'), 300, (dataUrl) => {
+  pendingHirePhoto = dataUrl;
+  document.getElementById('hf-photo-img').src = dataUrl;
+  document.getElementById('hf-photo-img').style.display = 'block';
+  document.getElementById('hf-photo-placeholder').style.display = 'none';
+});
+
 function openHireModal() {
-  ['hf-name','hf-email','hf-password','hf-specialty','hf-languages','hf-price'].forEach(id => document.getElementById(id).value = '');
+  ['hf-name','hf-email','hf-password','hf-price'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('hire-error').textContent = '';
   document.getElementById('hire-credentials').style.display = 'none';
   document.getElementById('hire-submit-btn').style.display = 'inline-flex';
+  pendingHirePhoto = null;
+  document.getElementById('hf-photo-input').value = '';
+  document.getElementById('hf-photo-img').style.display = 'none';
+  document.getElementById('hf-photo-placeholder').style.display = 'flex';
+  document.getElementById('hf-photo-placeholder').textContent = '?';
+  hireSpecialtyMs = createMultiSelect(document.getElementById('hf-specialty-ms'), SPECIALTY_OPTIONS, '', 5);
+  hireLanguagesMs = createMultiSelect(document.getElementById('hf-languages-ms'), LANGUAGE_OPTIONS, '', 5);
   document.getElementById('hire-overlay').classList.add('show');
 }
 function closeHireModal() { document.getElementById('hire-overlay').classList.remove('show'); }
@@ -1196,8 +1720,8 @@ async function submitHire() {
   const name = document.getElementById('hf-name').value.trim();
   const email = document.getElementById('hf-email').value.trim();
   const password = document.getElementById('hf-password').value;
-  const specialty = document.getElementById('hf-specialty').value.trim();
-  const languages = document.getElementById('hf-languages').value.trim();
+  const specialty = hireSpecialtyMs ? hireSpecialtyMs.getValue() : '';
+  const languages = hireLanguagesMs ? hireLanguagesMs.getValue() : '';
   const price = document.getElementById('hf-price').value.trim();
   const errEl = document.getElementById('hire-error');
   errEl.textContent = '';
@@ -1208,11 +1732,13 @@ async function submitHire() {
     const cred = await secondaryAuth.createUserWithEmailAndPassword(email, password);
     const newUid = cred.user.uid;
     await secondaryAuth.signOut();
-    await db.collection('astrologers').doc(newUid).set({
+    const data = {
       name, email, specialty, languages, price, about: '',
       chatOnline: false, callOnline: false, videoOnline: false,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
+    };
+    if (pendingHirePhoto) data.profilePhoto = pendingHirePhoto;
+    await db.collection('astrologers').doc(newUid).set(data, { merge: true });
     logActivity('Added astrologer', name, 'astrologer');
     document.getElementById('hire-credentials').style.display = 'block';
     document.getElementById('hire-credentials').innerHTML = `<b>Astrologer added.</b><br>Share these sign-in details:<br>Email: <b>${escHtml(email)}</b><br>Password: <b>${escHtml(password)}</b>`;
@@ -1544,11 +2070,14 @@ let reviewsCache = [];
 let reviewsUnsub = null;
 let reviewsFilter = 'all';
 let reviewAstroNames = {};
+let reviewsSort = 'desc'; // 'desc' = highest rated astrologer first, 'asc' = lowest first
+let reviewsDrillAstroId = null;
 
 PAGE_LOADERS.reviews = function() {
-  const listEl = document.getElementById('reviews-list');
+  const listEl = document.getElementById('reviews-astro-list');
   listEl.innerHTML = skeletonBlock();
-  if (reviewsUnsub) return renderReviewsList();
+  closeReviewsDrill();
+  if (reviewsUnsub) return renderReviewsAstroList();
   reviewsUnsub = db.collection('reviews').onSnapshot(async snap => {
     reviewsCache = [];
     snap.forEach(d => reviewsCache.push({ id: d.id, ...d.data() }));
@@ -1559,9 +2088,64 @@ PAGE_LOADERS.reviews = function() {
       try { const s = await db.collection('astrologers').doc(aid).get(); reviewAstroNames[aid] = s.exists ? (s.data().name || 'Astrologer') : 'Astrologer'; }
       catch (e) { reviewAstroNames[aid] = 'Astrologer'; }
     }
-    renderReviewsList();
+    renderReviewsAstroList();
+    if (reviewsDrillAstroId) renderReviewsList();
   }, err => { listEl.innerHTML = `<div class="empty">Error: ${escHtml(err.message)}</div>`; });
 };
+
+document.getElementById('reviews-sort-seg').querySelectorAll('span').forEach(s => s.addEventListener('click', () => {
+  document.getElementById('reviews-sort-seg').querySelectorAll('span').forEach(x => x.classList.remove('active'));
+  s.classList.add('active'); reviewsSort = s.dataset.sort; renderReviewsAstroList();
+}));
+
+// One row per astrologer, with their average rating across all (non-hidden-aware — averages include hidden reviews too, matching the raw rating data).
+function renderReviewsAstroList() {
+  const listEl = document.getElementById('reviews-astro-list');
+  const groups = {};
+  reviewsCache.forEach(r => {
+    if (!r.astrologerId) return;
+    if (!groups[r.astrologerId]) groups[r.astrologerId] = { sum: 0, count: 0 };
+    groups[r.astrologerId].sum += (r.rating || 0);
+    groups[r.astrologerId].count++;
+  });
+  let rows = Object.keys(groups).map(aid => ({
+    astrologerId: aid,
+    name: reviewAstroNames[aid] || 'Astrologer',
+    avg: groups[aid].sum / groups[aid].count,
+    count: groups[aid].count
+  }));
+  rows.sort((a, b) => reviewsSort === 'desc' ? b.avg - a.avg : a.avg - b.avg);
+  if (!rows.length) { listEl.innerHTML = '<div class="empty">No reviews yet.</div>'; return; }
+  listEl.innerHTML = `
+    <table class="dt">
+      <thead><tr><th>Astrologer</th><th>Average rating</th><th>Reviews</th></tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr style="cursor:pointer;" onclick="openReviewsDrill('${r.astrologerId}')">
+            <td class="dt-name">${escHtml(r.name)}</td>
+            <td style="color:var(--gold-hi);">★ ${r.avg.toFixed(1)}</td>
+            <td class="dt-num" style="color:var(--muted);">${r.count}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function openReviewsDrill(astrologerId) {
+  reviewsDrillAstroId = astrologerId;
+  reviewsFilter = 'all';
+  document.getElementById('reviews-seg').querySelectorAll('span').forEach(x => x.classList.toggle('active', x.dataset.star === 'all'));
+  document.getElementById('reviews-drill-title').textContent = reviewAstroNames[astrologerId] || 'Astrologer';
+  document.getElementById('reviews-astro-view').style.display = 'none';
+  document.getElementById('reviews-drill-view').style.display = 'block';
+  renderReviewsList();
+}
+function closeReviewsDrill() {
+  reviewsDrillAstroId = null;
+  document.getElementById('reviews-astro-view').style.display = 'block';
+  document.getElementById('reviews-drill-view').style.display = 'none';
+}
 
 document.getElementById('reviews-seg').querySelectorAll('span').forEach(s => s.addEventListener('click', () => {
   document.getElementById('reviews-seg').querySelectorAll('span').forEach(x => x.classList.remove('active'));
@@ -1570,17 +2154,17 @@ document.getElementById('reviews-seg').querySelectorAll('span').forEach(s => s.a
 
 function renderReviewsList() {
   const listEl = document.getElementById('reviews-list');
-  let rows = reviewsCache;
+  if (!reviewsDrillAstroId) return;
+  let rows = reviewsCache.filter(r => r.astrologerId === reviewsDrillAstroId);
   if (reviewsFilter !== 'all') rows = rows.filter(r => String(r.rating) === reviewsFilter);
   if (!rows.length) { listEl.innerHTML = '<div class="empty">No reviews here.</div>'; return; }
   listEl.innerHTML = `
     <table class="dt">
-      <thead><tr><th>Rating</th><th>Astrologer</th><th>From</th><th>Review</th><th></th></tr></thead>
+      <thead><tr><th>Rating</th><th>From</th><th>Review</th><th></th></tr></thead>
       <tbody>
         ${rows.map(r => `
           <tr>
             <td style="color:var(--gold-hi); letter-spacing:1px;">${'★'.repeat(r.rating || 0)}${'☆'.repeat(5 - (r.rating || 0))}</td>
-            <td>${escHtml(reviewAstroNames[r.astrologerId] || '—')}</td>
             <td>${escHtml(r.userName || 'User')}</td>
             <td style="max-width:300px; color:var(--muted);">${escHtml(r.description || '—')}</td>
             <td style="text-align:right;">
@@ -1630,10 +2214,10 @@ function renderUserTable() {
   if (!rows.length) { wrap.innerHTML = '<div class="empty">No users match your search.</div>'; return; }
   wrap.innerHTML = `
     <table class="dt">
-      <thead><tr><th>User</th><th>Email</th><th>Wallet balance</th><th></th></tr></thead>
+      <thead><tr><th>User</th><th>Email</th><th>Wallet balance</th><th>Status</th><th></th></tr></thead>
       <tbody>
         ${rows.map(u => `
-          <tr>
+          <tr style="cursor:pointer;" onclick="openUserDrawer('${u.id}')">
             <td>
               <div class="flex-row">
                 ${u.photoURL ? `<img class="row-photo" src="${u.photoURL}">` : `<div class="row-photo-empty">${(u.name || '?').charAt(0).toUpperCase()}</div>`}
@@ -1642,12 +2226,80 @@ function renderUserTable() {
             </td>
             <td style="color:var(--muted);">${escHtml(u.email || '—')}</td>
             <td class="dt-num">₹${(u.balance || 0).toFixed(2)}</td>
-            <td></td>
+            <td>${banBadgeHtml(u)}</td>
+            <td style="text-align:right;">
+              <span class="icon-btn" onclick="event.stopPropagation(); openUserDrawer('${u.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+              </span>
+            </td>
           </tr>
         `).join('')}
       </tbody>
     </table>
   `;
+}
+
+function openUserDrawer(id) {
+  const u = userListCache.find(x => x.id === id);
+  if (!u) return;
+  adEditPhoto = null;
+  const body = document.getElementById('user-drawer-body');
+  body.innerHTML = `
+    ${detailAvatarUploadHtml({ name: u.name, profilePhoto: u.photoURL }, 'ud-photo-input', 'ud-photo-img', 'ud-photo-ph')}
+    ${banBannerHtml(u)}
+    ${tabsHtml('ud', [
+      { key: 'profile', label: 'Profile' },
+      { key: 'tickets', label: 'Tickets' },
+      { key: 'remedies', label: 'Remedy orders' },
+      { key: 'chats', label: 'Chats' }
+    ])}
+  `;
+  const profilePanel = document.getElementById('ud-panel-profile');
+  profilePanel.innerHTML = `
+    <div class="field"><label>Full name</label><input type="text" id="ud-name" value="${escHtml(u.name || '')}"></div>
+    <div class="field"><label>Email</label><input type="text" value="${escHtml(u.email || '')}" disabled style="opacity:0.6;"></div>
+    <div style="display:flex; gap:10px; margin-top:8px;">
+      <button class="btn btn-gold" style="flex:1;" onclick="saveUserEdit('${u.id}')">Save changes</button>
+    </div>
+    <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--line);">
+      <div style="font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:10px;">Wallet balance</div>
+      <div style="font-family:'Fraunces',serif; font-size:22px;">₹${(u.balance || 0).toFixed(2)}</div>
+    </div>
+    <div style="margin-top:14px; font-size:11.5px; color:var(--muted);">Note: reviews this user has left aren't tracked back to a user id in the reviews collection, so "reviews given" can't be listed here.</div>
+    ${banControlsHtml('users', u.id, u.name || 'this user', 'user', u)}
+  `;
+  setupCirclePhotoUpload(document.getElementById('ud-photo-input'), 300, (dataUrl) => {
+    adEditPhoto = dataUrl;
+    const img = document.getElementById('ud-photo-img');
+    img.src = dataUrl; img.style.display = 'block';
+    const ph = document.getElementById('ud-photo-ph');
+    if (ph) ph.style.display = 'none';
+  });
+
+  let loadedRemedies = false, loadedChats = false;
+  loadTicketsForEntity(u.id, 'user', document.getElementById('ud-panel-tickets'));
+  wireTabs('ud', (tab) => {
+    if (tab === 'remedies' && !loadedRemedies) { loadedRemedies = true; loadRemedyOrdersForEntity(u.id, 'userId', document.getElementById('ud-panel-remedies')); }
+    if (tab === 'chats' && !loadedChats) {
+      loadedChats = true;
+      loadChatsForEntity(u.id, 'userId', document.getElementById('ud-panel-chats'), (coll, chatId) => openChatTranscript(coll, chatId, u.name));
+    }
+  });
+
+  document.getElementById('user-drawer-overlay').classList.add('show');
+}
+function closeUserDrawer() { document.getElementById('user-drawer-overlay').classList.remove('show'); }
+
+async function saveUserEdit(id) {
+  const name = document.getElementById('ud-name').value.trim();
+  try {
+    const data = { name, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (adEditPhoto) data.photoURL = adEditPhoto;
+    await db.collection('users').doc(id).update(data);
+    logActivity('Updated user profile', name, 'user');
+    showToast('User updated.');
+    closeUserDrawer();
+  } catch (e) { showToast('Could not save: ' + e.message); }
 }
 
 // ============ REMEDIES CATALOG ============
@@ -1868,7 +2520,10 @@ const ACTION_ICONS = {
   'Replied to ticket': '💬', 'Closed ticket (resolved)': '✅', 'Closed ticket (NOT resolved)': '⚠️', 'Claimed ticket': '🔒', 'Released ticket': '🔓',
   'Verified payout': '💰', 'Hid review': '🚫',
   'Added remedy': '➕', 'Updated remedy': '✏️', 'Deleted remedy': '🗑️',
-  'Added team member': '👥', 'Deactivated team member': '⛔', 'Reactivated team member': '♻️'
+  'Added team member': '👥', 'Deactivated team member': '⛔', 'Reactivated team member': '♻️',
+  'Updated user profile': '✏️',
+  'Temporarily banned astrologer': '🚫', 'Permanently banned astrologer': '⛔', 'Unbanned astrologer': '♻️',
+  'Temporarily banned user': '🚫', 'Permanently banned user': '⛔', 'Unbanned user': '♻️'
 };
 
 PAGE_LOADERS.activity = function() {
@@ -1919,10 +2574,13 @@ function renderActivityList() {
 // ---------------- Escape key & click-outside close every overlay/drawer ----------------
 const OVERLAY_CLOSERS = {
   'astro-drawer-overlay': closeAstroDrawer,
+  'user-drawer-overlay': closeUserDrawer,
   'ticket-drawer-overlay': closeTicketDrawer,
   'hire-overlay': closeHireModal,
   'remedy-overlay': closeRemedyModal,
   'team-overlay': closeTeamModal,
+  'ban-overlay': closeBanModal,
+  'chat-transcript-overlay': closeChatTranscript,
   'confirm-overlay': () => document.getElementById('confirm-cancel-btn').click(),
   'resolve-overlay': () => document.getElementById('resolve-overlay').classList.remove('show')
 };
