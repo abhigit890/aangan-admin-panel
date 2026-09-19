@@ -1713,7 +1713,7 @@ async function loadReviewsForAstrologer(astroId, panelEl) {
 
 // ---------------- Performance / visibility parameters ----------------
 const PERF_GRACE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-const PERF_THRESHOLDS = { callRatingPct: 75, chatRatingPct: 75, loyalUsersPct: 40, satisfactionPct: 70 };
+const PERF_THRESHOLDS = { callRatingPct: 75, chatRatingPct: 75, loyalUsersPct: 40, satisfactionPct: 70, responseRatePct: 85 };
 
 function tsToMs(ts) {
   if (!ts) return 0;
@@ -1727,14 +1727,15 @@ async function computeAstroParams(astroId, createdAt) {
   const createdMs = tsToMs(createdAt);
   const ageMs = createdMs ? (Date.now() - createdMs) : 0;
   if (!createdMs || ageMs < PERF_GRACE_MS) {
-    return { callRatingPct: 100, chatRatingPct: 100, loyalUsersPct: 100, satisfactionPct: 100, visibilityScore: 100, inGracePeriod: true };
+    return { callRatingPct: 100, chatRatingPct: 100, loyalUsersPct: 100, satisfactionPct: 100, responseRatePct: 100, visibilityScore: 100, inGracePeriod: true };
   }
 
-  const [reviewsSnap, chatsSnap, callsSnap, satSnap] = await Promise.all([
+  const [reviewsSnap, chatsSnap, callsSnap, satSnap, requestsSnap] = await Promise.all([
     db.collection('reviews').where('astrologerId', '==', astroId).get(),
     db.collection('chats').where('astrologerId', '==', astroId).get(),
     db.collection('calls').where('astrologerId', '==', astroId).get(),
-    db.collection('satisfactionRatings').where('astrologerId', '==', astroId).get()
+    db.collection('satisfactionRatings').where('astrologerId', '==', astroId).get(),
+    db.collection('requests').where('astrologerId', '==', astroId).get()
   ]);
 
   const reviews = []; reviewsSnap.forEach(d => reviews.push(d.data()));
@@ -1784,9 +1785,33 @@ async function computeAstroParams(astroId, createdAt) {
     satisfactionPct = Math.round((avgScore / 10) * 100);
   }
 
-  const visibilityScore = Math.round((callRatingPct + chatRatingPct + loyalUsersPct + satisfactionPct) / 4);
+  // Response rate: of the astrologer's most recent 100 SETTLED requests (ones that
+  // reached either an accept or a miss/decline — a still-waiting request isn't settled
+  // yet, so it's excluded rather than counted against them), what % were NOT missed by
+  // the astrologer. This is what keeps an astrologer from just rejecting/ignoring
+  // most incoming chats and calls — the more they miss, the lower this goes.
+  const requestRows = []; requestsSnap.forEach(d => requestRows.push(d.data()));
+  // Only requests the astrologer themselves missed count against them here. A request
+  // the user backed out of/cancelled — even one the astrologer had already accepted —
+  // is excluded entirely (missedBy:'user'), so it has no effect either way. We use the
+  // permanent `astrologerAcceptedAt` timestamp (not the current `queueStatus`, which
+  // gets overwritten to 'user_declined' once the user cancels) to know the astrologer
+  // did engage with a request.
+  const settledRequests = requestRows.filter(r =>
+    r.missedBy !== 'user' &&
+    (r.missedBy === 'astrologer' || !!r.astrologerAcceptedAt || r.queueStatus === 'completed' || r.queueStatus === 'started')
+  );
+  settledRequests.sort((a, b) => tsToMs(b.createdAt) - tsToMs(a.createdAt));
+  const recentRequests = settledRequests.slice(0, 100);
+  let responseRatePct = 100;
+  if (recentRequests.length) {
+    const responded = recentRequests.filter(r => r.missedBy !== 'astrologer').length;
+    responseRatePct = Math.round((responded / recentRequests.length) * 100);
+  }
 
-  return { callRatingPct, chatRatingPct, loyalUsersPct, satisfactionPct, visibilityScore, inGracePeriod: false };
+  const visibilityScore = Math.round((callRatingPct + chatRatingPct + loyalUsersPct + satisfactionPct + responseRatePct) / 5);
+
+  return { callRatingPct, chatRatingPct, loyalUsersPct, satisfactionPct, responseRatePct, visibilityScore, inGracePeriod: false };
 }
 
 function perfPillHtml(label, pct, threshold) {
@@ -1829,6 +1854,7 @@ async function loadPerformanceForAstrologer(astroId, createdAt, panelEl) {
         ${perfPillHtml('Average chat rating', p.chatRatingPct, PERF_THRESHOLDS.chatRatingPct)}
         ${perfPillHtml('Loyal users', p.loyalUsersPct, PERF_THRESHOLDS.loyalUsersPct)}
         ${perfPillHtml('Customer satisfaction', p.satisfactionPct, PERF_THRESHOLDS.satisfactionPct)}
+        ${perfPillHtml('Response rate (not missing chats/calls)', p.responseRatePct, PERF_THRESHOLDS.responseRatePct)}
       </div>
       <p style="font-size:11px; color:var(--muted-2); margin-top:12px;">Based on the most recent 100 relevant records for each parameter. Parameters with no records default to 100 (benefit of the doubt).</p>
     `;
