@@ -374,6 +374,25 @@ textarea{ resize:vertical; min-height:80px; }
 .avatar-upload .au-circle:hover .au-overlay{ opacity:1; }
 .avatar-upload .au-hint{ font-size:11.5px; color:var(--muted); }
 
+/* ============ PHOTO CROP OVERLAY ============ */
+.crop-stage{
+  position:relative; width:280px; height:280px; margin:0 auto; border-radius:8px; overflow:hidden;
+  background:var(--surface-3); touch-action:none; cursor:grab;
+}
+.crop-stage:active{ cursor:grabbing; }
+.crop-stage canvas{ position:absolute; top:0; left:0; width:100%; height:100%; }
+.crop-frame-mask{
+  position:absolute; inset:0; pointer-events:none;
+  box-shadow:0 0 0 2000px rgba(10,8,5,0.72);
+  border-radius:50%;
+}
+.crop-controls{ display:flex; align-items:center; gap:10px; margin-top:16px; }
+.crop-controls svg{ color:var(--muted); flex-shrink:0; }
+.crop-controls input[type="range"]{
+  flex:1; accent-color:var(--gold);
+}
+.crop-hint{ text-align:center; font-size:11.5px; color:var(--muted); margin-top:10px; }
+
 /* ============ BAN UI ============ */
 .badge-temp-ban{ background:var(--warn-bg); color:var(--warn); }
 .badge-perma-ban{ background:var(--bad-bg); color:var(--bad); }
@@ -833,6 +852,34 @@ textarea{ resize:vertical; min-height:80px; }
   </div>
 </div>
 
+<!-- PHOTO CROP MODAL (shared by hire modal + astrologer/user detail drawers) -->
+<div class="overlay" id="photo-crop-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-head">
+      <h3>Adjust photo</h3>
+      <div class="modal-close" onclick="cancelPhotoCrop()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="crop-stage" id="crop-stage">
+        <canvas id="crop-canvas" width="280" height="280"></canvas>
+        <div class="crop-frame-mask"></div>
+      </div>
+      <div class="crop-controls">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="6"/><path d="M10 7v6M7 10h6"/></svg>
+        <input type="range" id="crop-zoom" min="100" max="400" value="100">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="6"/><path d="M7 10h6"/></svg>
+      </div>
+      <div class="crop-hint">Drag to reposition &middot; use the slider to zoom</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cancelPhotoCrop()">Cancel</button>
+      <button class="btn btn-gold" onclick="savePhotoCrop()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- REMEDY MODAL -->
 <div class="overlay" id="remedy-overlay">
   <div class="modal">
@@ -1251,27 +1298,136 @@ function createMultiSelect(containerEl, options, selectedCsv, maxSelect) {
 }
 
 // ---------------- Square/circle photo upload helper (mirrors the rf-photo remedy pattern) ----------------
-// Reads a chosen image file, cover-fits it into a size x size canvas, and calls onReady(dataUrl).
+// Reads a chosen image file, then opens the interactive crop overlay so the admin can
+// reposition/zoom before the final size x size compressed JPEG is produced via onReady(dataUrl).
 function setupCirclePhotoUpload(inputEl, size, onReady) {
   inputEl.addEventListener('change', (e) => {
     const file = e.target.files[0];
+    // Clear so re-selecting the same file (e.g. after a cancelled crop) still fires 'change'.
+    inputEl.value = '';
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
       const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = size; canvas.height = size;
-        const ctx = canvas.getContext('2d');
-        const scale = Math.max(size / img.width, size / img.height);
-        const w = img.width * scale, h = img.height * scale;
-        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
-        onReady(canvas.toDataURL('image/jpeg', 0.8));
-      };
+      img.onload = () => { openPhotoCropOverlay(img, size, onReady); };
       img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
   });
+}
+
+// ---------------- Interactive photo crop overlay ----------------
+// Shared by the Hire modal and the astrologer/user detail drawers' photo pickers.
+// Lets the admin drag to reposition and use a slider to zoom before the crop is
+// baked into a size x size canvas and compressed the same way as before.
+let cropState = null; // { img, size, onReady, stageEl, canvas, ctx, scale, minScale, offX, offY, dragging, lastX, lastY }
+
+function openPhotoCropOverlay(img, size, onReady) {
+  const stageEl = document.getElementById('crop-stage');
+  const canvas = document.getElementById('crop-canvas');
+  const ctx = canvas.getContext('2d');
+  const stageSize = canvas.width; // 280, matches the CSS .crop-stage box
+  const minScale = Math.max(stageSize / img.width, stageSize / img.height);
+  cropState = {
+    img, size, onReady, stageEl, canvas, ctx, stageSize,
+    scale: minScale, minScale,
+    offX: 0, offY: 0, // pan offset in stage pixels, relative to the centered image
+    dragging: false, lastX: 0, lastY: 0
+  };
+  document.getElementById('crop-zoom').value = 100;
+  drawCropCanvas();
+  document.getElementById('photo-crop-overlay').classList.add('show');
+}
+
+function drawCropCanvas() {
+  if (!cropState) return;
+  const { img, ctx, canvas, stageSize, scale, offX, offY } = cropState;
+  const w = img.width * scale, h = img.height * scale;
+  const x = (stageSize - w) / 2 + offX;
+  const y = (stageSize - h) / 2 + offY;
+  ctx.clearRect(0, 0, stageSize, stageSize);
+  ctx.drawImage(img, x, y, w, h);
+}
+
+function clampCropOffsets() {
+  if (!cropState) return;
+  const { img, scale, stageSize } = cropState;
+  const w = img.width * scale, h = img.height * scale;
+  const maxOffX = Math.max(0, (w - stageSize) / 2);
+  const maxOffY = Math.max(0, (h - stageSize) / 2);
+  cropState.offX = Math.min(maxOffX, Math.max(-maxOffX, cropState.offX));
+  cropState.offY = Math.min(maxOffY, Math.max(-maxOffY, cropState.offY));
+}
+
+(function initCropInteractions() {
+  const stageEl = document.getElementById('crop-stage');
+  const zoomEl = document.getElementById('crop-zoom');
+  if (!stageEl || !zoomEl) return;
+
+  function pointerPos(e) {
+    return { x: e.clientX, y: e.clientY };
+  }
+  stageEl.addEventListener('pointerdown', (e) => {
+    if (!cropState) return;
+    cropState.dragging = true;
+    const p = pointerPos(e);
+    cropState.lastX = p.x; cropState.lastY = p.y;
+    stageEl.setPointerCapture(e.pointerId);
+  });
+  stageEl.addEventListener('pointermove', (e) => {
+    if (!cropState || !cropState.dragging) return;
+    const p = pointerPos(e);
+    cropState.offX += p.x - cropState.lastX;
+    cropState.offY += p.y - cropState.lastY;
+    cropState.lastX = p.x; cropState.lastY = p.y;
+    clampCropOffsets();
+    drawCropCanvas();
+  });
+  function endDrag(e) {
+    if (!cropState) return;
+    cropState.dragging = false;
+    try { stageEl.releasePointerCapture(e.pointerId); } catch (err) {}
+  }
+  stageEl.addEventListener('pointerup', endDrag);
+  stageEl.addEventListener('pointercancel', endDrag);
+  stageEl.addEventListener('pointerleave', () => { if (cropState) cropState.dragging = false; });
+
+  zoomEl.addEventListener('input', () => {
+    if (!cropState) return;
+    const pct = Number(zoomEl.value) / 100;
+    cropState.scale = cropState.minScale * pct;
+    clampCropOffsets();
+    drawCropCanvas();
+  });
+})();
+
+function cancelPhotoCrop() {
+  document.getElementById('photo-crop-overlay').classList.remove('show');
+  cropState = null;
+}
+
+function savePhotoCrop() {
+  if (!cropState) return;
+  const { img, size, onReady, scale, offX, offY, stageSize } = cropState;
+  // Map the visible stage crop (a stageSize x stageSize window) back to source-image
+  // pixel coordinates: the image's top-left on the stage sits at
+  // ((stageSize - w)/2 + offX, (stageSize - h)/2 + offY) at the given scale.
+  const w = img.width * scale, h = img.height * scale;
+  const imgLeft = (stageSize - w) / 2 + offX;
+  const imgTop = (stageSize - h) / 2 + offY;
+  const sx = -imgLeft / scale;
+  const sy = -imgTop / scale;
+  const sSize = stageSize / scale;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, sx, sy, sSize, sSize, 0, 0, size, size);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+  document.getElementById('photo-crop-overlay').classList.remove('show');
+  cropState = null;
+  onReady(dataUrl);
 }
 
 // ---------------- Activity log ----------------
@@ -2577,6 +2733,7 @@ const OVERLAY_CLOSERS = {
   'user-drawer-overlay': closeUserDrawer,
   'ticket-drawer-overlay': closeTicketDrawer,
   'hire-overlay': closeHireModal,
+  'photo-crop-overlay': cancelPhotoCrop,
   'remedy-overlay': closeRemedyModal,
   'team-overlay': closeTeamModal,
   'ban-overlay': closeBanModal,
