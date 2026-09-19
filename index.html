@@ -637,10 +637,31 @@ textarea{ resize:vertical; min-height:80px; }
       <div id="ticket-claim-banner" style="display:none; margin-bottom:14px; padding:11px 14px; border-radius:var(--radius-sm); font-size:13px;"></div>
       <div id="ticket-thread" style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px; max-height:50vh; overflow-y:auto;"></div>
       <div class="field"><textarea id="ticket-reply-text" rows="3" placeholder="Type a reply…"></textarea></div>
+      <div id="ticket-close-hint" style="display:none; font-size:12px; color:var(--muted); margin:-6px 0 10px;">Send at least one reply before you can close this ticket.</div>
       <div style="display:flex; gap:10px;">
         <button class="btn btn-gold" style="flex:1;" id="ticket-send-btn" onclick="sendTicketReply()">Send reply</button>
         <button class="btn btn-danger-ghost" id="ticket-close-btn" onclick="closeTicketAsResolved()">Close ticket</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- TICKET RESOLUTION MODAL -->
+<div class="overlay" id="resolve-overlay">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-head">
+      <h3>Close ticket</h3>
+      <div class="modal-close" onclick="document.getElementById('resolve-overlay').classList.remove('show')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 14px; font-size:13.5px; color:var(--muted);">Before this ticket closes, mark whether the person's problem was actually solved — this is what shows up in the Activity Log for accountability.</p>
+      <div class="field"><label>Note (optional)</label><textarea id="resolve-note" rows="2" placeholder="Short note — what was done, or why it's unresolved…"></textarea></div>
+    </div>
+    <div class="modal-foot" style="flex-direction:column; align-items:stretch; gap:8px;">
+      <button class="btn btn-gold" style="width:100%;" onclick="submitTicketClose('resolved')">✅ Resolved — close ticket</button>
+      <button class="btn btn-danger-ghost" style="width:100%;" onclick="submitTicketClose('unresolved')">⚠️ Not resolved — close anyway</button>
     </div>
   </div>
 </div>
@@ -1267,6 +1288,13 @@ function renderTicketList(role) {
               ${claimedByOther ? `<span class="badge badge-bad">🔒 ${escHtml(t.claimedByName || 'Someone')}</span>` : ''}
               ${claimedByMe ? `<span class="badge badge-good">🔒 You</span>` : ''}
               ${!t.claimedBy && (t.status || 'open') === 'open' ? `<span style="color:var(--muted);">Unclaimed</span>` : ''}
+              ${(t.status || 'open') === 'open' ? `<span class="badge ${t.adminReplyCount > 0 ? 'badge-muted' : 'badge-warn'}" style="margin-left:6px;" title="Admin replies sent">💬 ${t.adminReplyCount || 0}</span>` : ''}
+              ${t.status === 'closed' ? (t.resolutionStatus === 'resolved'
+                  ? `<span class="badge badge-good">✅ Resolved</span>`
+                  : t.resolutionStatus === 'unresolved'
+                    ? `<span class="badge badge-bad">⚠️ Not resolved</span>`
+                    : `<span class="badge badge-muted">Closed</span>`) : ''}
+              ${t.status === 'closed' && t.closedByName ? `<div style="color:var(--muted); margin-top:3px;">by ${escHtml(t.closedByName)}</div>` : ''}
             </td>
             <td style="text-align:right; font-size:12px; color:var(--muted);">${fmtDateTime(t.lastMessageAt)}</td>
           </tr>
@@ -1289,7 +1317,8 @@ function openTicketDrawer(role, id) {
   currentTicketDrawer = { role, id };
   const t = ticketState[role].cache.find(x => x.id === id);
   const overdueTag = t && isTicketOverdue(t) ? ` · ⚠ open ${Math.floor(ticketAgeDays(t))}d` : '';
-  document.getElementById('ticket-drawer-title').textContent = `#${t?.ticketNumber || ''} · ${t?.raisedByName || 'Ticket'}${overdueTag}`;
+  const resolvedTag = t?.status === 'closed' ? (t.resolutionStatus === 'resolved' ? ' · ✅ Resolved' : t.resolutionStatus === 'unresolved' ? ' · ⚠️ Not resolved' : '') : '';
+  document.getElementById('ticket-drawer-title').textContent = `#${t?.ticketNumber || ''} · ${t?.raisedByName || 'Ticket'}${overdueTag}${resolvedTag}`;
   document.getElementById('ticket-reply-text').value = '';
   const threadEl = document.getElementById('ticket-thread');
   threadEl.innerHTML = skeletonBlock();
@@ -1320,11 +1349,23 @@ function renderTicketClaimBanner(role, id, t) {
   const replyBox = document.getElementById('ticket-reply-text');
   const sendBtn = document.getElementById('ticket-send-btn');
   const closeBtn = document.getElementById('ticket-close-btn');
+  const closeHint = document.getElementById('ticket-close-hint');
   const isClosed = t.status === 'closed';
-  closeBtn.style.display = isClosed ? 'none' : 'inline-flex';
+  const hasReplied = (t.adminReplyCount || 0) > 0;
+  closeBtn.style.display = (!isClosed && hasReplied) ? 'inline-flex' : 'none';
+  closeHint.style.display = (!isClosed && !hasReplied) ? 'block' : 'none';
 
   if (isClosed) {
-    banner.style.display = 'none';
+    if (t.resolutionNote || t.resolutionStatus) {
+      banner.style.display = 'block';
+      const good = t.resolutionStatus === 'resolved';
+      banner.style.background = good ? 'var(--good-bg)' : 'var(--bad-bg)';
+      banner.style.border = `1px solid ${good ? 'rgba(79,156,110,0.3)' : 'rgba(193,91,84,0.3)'}`;
+      banner.style.color = good ? 'var(--good)' : 'var(--bad)';
+      banner.innerHTML = `${good ? '✅ Marked resolved' : '⚠️ Closed without resolving'} by <b>${escHtml(t.closedByName || 'an admin')}</b>${t.resolutionNote ? ' — "' + escHtml(t.resolutionNote) + '"' : ''}`;
+    } else {
+      banner.style.display = 'none';
+    }
     replyBox.disabled = false; sendBtn.disabled = false;
     return;
   }
@@ -1394,20 +1435,43 @@ async function sendTicketReply() {
       text, senderType: 'admin', sentAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     await db.collection('supportTickets').doc(id).update({
-      lastMessage: text, lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+      lastMessage: text, lastMessageAt: firebase.firestore.FieldValue.serverTimestamp(),
+      adminReplyCount: firebase.firestore.FieldValue.increment(1),
+      lastRepliedBy: currentAdmin.uid, lastRepliedByName: currentAdmin.name
     });
-    logActivity('Replied to ticket', `#${t?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user');
+    const snippet = text.length > 90 ? text.slice(0, 90) + '…' : text;
+    logActivity('Replied to ticket', `#${t?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user', `said: "${snippet}"`);
   } catch (e) { showToast('Could not send: ' + e.message); }
 }
 
-async function closeTicketAsResolved() {
+function closeTicketAsResolved() {
   if (!currentTicketDrawer) return;
-  if (!(await confirmDialog('Mark this ticket as closed?', { okLabel: 'Close ticket' }))) return;
   const { role, id } = currentTicketDrawer;
   const t = ticketState[role].cache.find(x => x.id === id);
+  // Defensive re-check even though the button is hidden until a reply exists — closes a race
+  // where the ticket data hasn't refreshed in this admin's view yet.
+  if (!t || !(t.adminReplyCount > 0)) {
+    showToast('Send at least one reply before closing this ticket.');
+    return;
+  }
+  document.getElementById('resolve-note').value = '';
+  document.getElementById('resolve-overlay').classList.add('show');
+}
+
+async function submitTicketClose(resolutionStatus) {
+  if (!currentTicketDrawer) return;
+  const { role, id } = currentTicketDrawer;
+  const t = ticketState[role].cache.find(x => x.id === id);
+  const note = document.getElementById('resolve-note').value.trim();
   try {
-    await db.collection('supportTickets').doc(id).update({ status: 'closed', claimedBy: null, claimedByName: null, claimedAt: null });
-    logActivity('Closed ticket', `#${t?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user');
+    await db.collection('supportTickets').doc(id).update({
+      status: 'closed', claimedBy: null, claimedByName: null, claimedAt: null,
+      resolutionStatus, resolutionNote: note,
+      closedBy: currentAdmin.uid, closedByName: currentAdmin.name, closedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const label = resolutionStatus === 'resolved' ? 'Closed ticket (resolved)' : 'Closed ticket (NOT resolved)';
+    logActivity(label, `#${t?.ticketNumber || id}`, role === 'astrologer' ? 'astrologer' : 'user', note || undefined);
+    document.getElementById('resolve-overlay').classList.remove('show');
     showToast('Ticket closed.');
     closeTicketDrawer();
   } catch (e) { showToast('Could not close: ' + e.message); }
@@ -1801,7 +1865,7 @@ let activityFilter = 'all';
 
 const ACTION_ICONS = {
   'Added astrologer': '👤', 'Updated astrologer profile': '✏️',
-  'Replied to ticket': '💬', 'Closed ticket': '✅', 'Claimed ticket': '🔒', 'Released ticket': '🔓',
+  'Replied to ticket': '💬', 'Closed ticket (resolved)': '✅', 'Closed ticket (NOT resolved)': '⚠️', 'Claimed ticket': '🔒', 'Released ticket': '🔓',
   'Verified payout': '💰', 'Hid review': '🚫',
   'Added remedy': '➕', 'Updated remedy': '✏️', 'Deleted remedy': '🗑️',
   'Added team member': '👥', 'Deactivated team member': '⛔', 'Reactivated team member': '♻️'
@@ -1859,7 +1923,8 @@ const OVERLAY_CLOSERS = {
   'hire-overlay': closeHireModal,
   'remedy-overlay': closeRemedyModal,
   'team-overlay': closeTeamModal,
-  'confirm-overlay': () => document.getElementById('confirm-cancel-btn').click()
+  'confirm-overlay': () => document.getElementById('confirm-cancel-btn').click(),
+  'resolve-overlay': () => document.getElementById('resolve-overlay').classList.remove('show')
 };
 Object.keys(OVERLAY_CLOSERS).forEach(id => {
   const el = document.getElementById(id);
