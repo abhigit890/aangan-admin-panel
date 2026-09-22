@@ -1069,6 +1069,16 @@ auth.onAuthStateChanged(async (user) => {
     }
     const a = snap.data();
     currentAdmin = { uid: user.uid, name: a.name || user.email, email: user.email, role: a.role || 'user' };
+    // If this admin's email was changed via verifyBeforeUpdateEmail (see
+    // updateMyCredentials), Firebase Auth only applies it once the person
+    // clicks the confirmation link in the new inbox — at that point
+    // auth.currentUser.email is the new address, but the admins/{uid} doc
+    // (used for display elsewhere in this app) is still the old one. Keep
+    // it in sync here, on every login, rather than relying on the change
+    // being made at click-time (which happens outside this app entirely).
+    if (a.email !== user.email) {
+      db.collection('admins').doc(user.uid).update({ email: user.email }).catch(() => {});
+    }
     enterApp();
   } catch (e) {
     document.getElementById('login-error').textContent = 'Could not verify your access: ' + e.message;
@@ -2853,9 +2863,14 @@ async function updateMyCredentials() {
     const user = auth.currentUser;
     const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
     await user.reauthenticateWithCredential(cred);
+    let emailPending = false;
     if (newEmail && newEmail !== user.email) {
-      await user.updateEmail(newEmail);
-      await db.collection('admins').doc(user.uid).update({ email: newEmail });
+      // Firebase no longer allows changing the email directly — it must be
+      // verified first. This sends a confirmation link to the NEW address;
+      // the login email only actually switches once that link is clicked
+      // (and the admins/{uid} doc is then synced automatically on next login).
+      await user.verifyBeforeUpdateEmail(newEmail);
+      emailPending = true;
     }
     if (newPassword) {
       await user.updatePassword(newPassword);
@@ -2864,8 +2879,11 @@ async function updateMyCredentials() {
     document.getElementById('my-current-password').value = '';
     document.getElementById('my-new-email').value = '';
     document.getElementById('my-new-password').value = '';
-    if (newEmail) currentAdmin.email = newEmail;
-    showToast('Your login has been updated.');
+    if (emailPending) {
+      showToast(`Check ${newEmail} and click the confirmation link — the email will switch over once you do.`);
+    } else {
+      showToast('Your login has been updated.');
+    }
   } catch (e) {
     errEl.textContent = 'Error: ' + e.message;
   }
