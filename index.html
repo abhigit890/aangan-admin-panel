@@ -679,6 +679,19 @@ textarea{ resize:vertical; min-height:80px; }
             Add team member
           </button>
         </div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-body">
+            <div class="ph-sub" style="margin-bottom:12px; font-weight:600;">My account (super admin login)</div>
+            <div style="display:grid; gap:10px; max-width:420px;">
+              <input type="password" id="my-current-password" placeholder="Current password" autocomplete="current-password">
+              <input type="email" id="my-new-email" placeholder="New email (leave blank to keep current)" autocomplete="email">
+              <input type="password" id="my-new-password" placeholder="New password (leave blank to keep current)" autocomplete="new-password">
+              <div id="my-account-error" style="color:var(--bad, #d33); font-size:12.5px;"></div>
+              <button class="btn btn-gold" style="width:fit-content;" onclick="updateMyCredentials()">Update my login</button>
+            </div>
+            <div style="font-size:12px; color:var(--muted); margin-top:10px;">For security, Firebase requires your current password before an email or password change. This changes only your own login.</div>
+          </div>
+        </div>
         <div class="toolbar">
           <div class="search-box">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -966,6 +979,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+// Kinnar Talk's User App, Astrologer App and Admin Panel are all hosted
+// under the same GitHub Pages origin (different paths only), so by default
+// they'd share one browser-wide Firebase Auth session — logging out of any
+// one of them would sign the others out too, since Firebase Auth broadcasts
+// sign-in/sign-out across every tab of the same origin. Session persistence
+// scopes each tab's login to that tab alone, so this app's login/logout
+// never affects the other two apps' tabs.
+auth.setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(() => {});
 
 // Secondary app instance so creating a new team member doesn't sign the current admin out.
 const secondaryApp = firebase.initializeApp(firebaseConfig, "secondary");
@@ -2786,8 +2807,9 @@ function renderTeamTable() {
             <td style="color:var(--muted);">${escHtml(m.email || '—')}</td>
             <td><span class="role-pill ${ROLE_CLASS[m.role] || ''}">${ROLE_LABEL[m.role] || m.role}</span></td>
             <td>${m.active === false ? '<span class="badge badge-bad">Deactivated</span>' : '<span class="badge badge-good">Active</span>'}</td>
-            <td style="text-align:right;">
-              ${m.id !== currentAdmin.uid ? `<button class="btn btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="toggleAdminActive('${m.id}', ${m.active !== false})">${m.active === false ? 'Reactivate' : 'Deactivate'}</button>` : '<span style="font-size:12px; color:var(--muted);">You</span>'}
+            <td style="text-align:right; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+              <button class="btn btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="sendTeamPasswordReset('${escHtml(m.email || '')}')">Send password reset</button>
+              ${m.id !== currentAdmin.uid ? `<button class="btn btn-ghost" style="padding:6px 12px; font-size:12px;" onclick="toggleAdminActive('${m.id}', ${m.active !== false})">${m.active === false ? 'Reactivate' : 'Deactivate'}</button>` : '<span style="font-size:12px; color:var(--muted); align-self:center;">You</span>'}
             </td>
           </tr>
         `).join('')}
@@ -2816,6 +2838,55 @@ function openTeamModal() {
   document.getElementById('team-overlay').classList.add('show');
 }
 function closeTeamModal() { document.getElementById('team-overlay').classList.remove('show'); }
+
+async function updateMyCredentials() {
+  const errEl = document.getElementById('my-account-error');
+  errEl.textContent = '';
+  if (!currentAdmin || currentAdmin.role !== 'super') { errEl.textContent = 'Only the super admin can do this.'; return; }
+  const currentPassword = document.getElementById('my-current-password').value;
+  const newEmail = document.getElementById('my-new-email').value.trim();
+  const newPassword = document.getElementById('my-new-password').value;
+  if (!currentPassword) { errEl.textContent = 'Enter your current password first.'; return; }
+  if (!newEmail && !newPassword) { errEl.textContent = 'Enter a new email and/or a new password.'; return; }
+  if (newPassword && newPassword.length < 6) { errEl.textContent = 'New password must be at least 6 characters.'; return; }
+  try {
+    const user = auth.currentUser;
+    const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+    await user.reauthenticateWithCredential(cred);
+    if (newEmail && newEmail !== user.email) {
+      await user.updateEmail(newEmail);
+      await db.collection('admins').doc(user.uid).update({ email: newEmail });
+    }
+    if (newPassword) {
+      await user.updatePassword(newPassword);
+    }
+    logActivity('Updated my own login credentials', newEmail || currentAdmin.email, 'team');
+    document.getElementById('my-current-password').value = '';
+    document.getElementById('my-new-email').value = '';
+    document.getElementById('my-new-password').value = '';
+    if (newEmail) currentAdmin.email = newEmail;
+    showToast('Your login has been updated.');
+  } catch (e) {
+    errEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+// Client-side Firebase can only change the CURRENTLY signed-in user's own
+// email/password — there is no client-side way for the super admin to
+// directly overwrite someone else's password without a server (Cloud
+// Functions + Admin SDK), which this project deliberately isn't using.
+// The practical, no-backend equivalent: the super admin sends that team
+// member a password-reset email, and they set their own new password.
+async function sendTeamPasswordReset(email) {
+  if (!currentAdmin || currentAdmin.role !== 'super') { showToast('Only the super admin can do this.'); return; }
+  if (!email) { showToast('This team member has no email on file.'); return; }
+  if (!(await confirmDialog(`Send a password reset link to ${email}?`, { okLabel: 'Send' }))) return;
+  try {
+    await auth.sendPasswordResetEmail(email);
+    logActivity('Sent password reset link', email, 'team');
+    showToast('Password reset email sent to ' + email + '.');
+  } catch (e) { showToast('Error: ' + e.message); }
+}
 
 async function submitTeamMember() {
   const name = document.getElementById('tf-name').value.trim();
