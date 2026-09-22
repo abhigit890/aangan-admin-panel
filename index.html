@@ -2573,7 +2573,14 @@ function openUserDrawer(id) {
     </div>
     <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--line);">
       <div style="font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:10px;">Wallet balance</div>
-      <div style="font-family:'Fraunces',serif; font-size:22px;">₹${(u.balance || 0).toFixed(2)}</div>
+      <div id="ud-balance-display" style="font-family:'Fraunces',serif; font-size:22px; margin-bottom:12px;">₹${(u.balance || 0).toFixed(2)}</div>
+      ${currentAdmin && currentAdmin.role === 'super' ? `
+        <div style="display:flex; gap:8px;">
+          <input type="number" id="ud-balance-add" placeholder="Amount (₹)" style="flex:1; padding:9px 10px; border-radius:8px; border:1px solid var(--line);">
+          <button class="btn" onclick="addUserBalance('${u.id}')">Add to balance</button>
+        </div>
+        <div style="margin-top:6px; font-size:11px; color:var(--muted);">Manual top-up — for testing, or until a payment gateway is added. Only visible to the super admin.</div>
+      ` : ''}
     </div>
     <div style="margin-top:14px; font-size:11.5px; color:var(--muted);">Note: reviews this user has left aren't tracked back to a user id in the reviews collection, so "reviews given" can't be listed here.</div>
     ${banControlsHtml('users', u.id, u.name || 'this user', 'user', u)}
@@ -2610,6 +2617,22 @@ async function saveUserEdit(id) {
     showToast('User updated.');
     closeUserDrawer();
   } catch (e) { showToast('Could not save: ' + e.message); }
+}
+
+async function addUserBalance(id) {
+  if (!currentAdmin || currentAdmin.role !== 'super') { showToast('Only the super admin can add wallet balance.'); return; }
+  const input = document.getElementById('ud-balance-add');
+  const amount = parseFloat(input.value);
+  if (!amount || amount <= 0) { showToast('Enter a valid amount first.'); return; }
+  try {
+    await db.collection('users').doc(id).update({ balance: firebase.firestore.FieldValue.increment(amount) });
+    const uSnap = await db.collection('users').doc(id).get();
+    const newBalance = (uSnap.exists && uSnap.data().balance) || 0;
+    document.getElementById('ud-balance-display').textContent = '₹' + newBalance.toFixed(2);
+    input.value = '';
+    logActivity('Added to user wallet balance', '₹' + amount.toFixed(2), 'user');
+    showToast('Balance updated.');
+  } catch (e) { showToast('Could not update balance: ' + e.message); }
 }
 
 // ============ REMEDIES CATALOG ============
