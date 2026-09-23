@@ -1978,6 +1978,7 @@ function openAstroDrawer(id) {
     <div class="field"><label>Email</label><input type="text" value="${escHtml(a.email || '')}" disabled style="opacity:0.6;"></div>
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button class="btn btn-gold" style="flex:1;" onclick="saveAstroEdit('${a.id}')">Save changes</button>
+      <button class="btn btn-ghost" onclick="sendAstroPasswordReset('${escHtml(a.email || '')}')">Send password reset</button>
     </div>
     <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--line);">
       <div style="font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:10px;">Wallet balance</div>
@@ -2010,6 +2011,21 @@ function openAstroDrawer(id) {
   document.getElementById('astro-drawer-overlay').classList.add('show');
 }
 function closeAstroDrawer() { document.getElementById('astro-drawer-overlay').classList.remove('show'); }
+
+// Whatever caused the credential mismatch when logging into the astrologer
+// app (a typo, a copy-paste with a stray space/newline, or the browser
+// autofilling a different saved account), this sidesteps the guesswork:
+// it sends a fresh, self-typed password link straight to that astrologer's
+// own inbox, rather than relying on whatever password was set at hire time.
+async function sendAstroPasswordReset(email) {
+  if (!email) { showToast('This astrologer has no email on file.'); return; }
+  if (!(await confirmDialog(`Send a password reset link to ${email}?`, { okLabel: 'Send' }))) return;
+  try {
+    await auth.sendPasswordResetEmail(email);
+    logActivity('Sent password reset link', email, 'astrologer');
+    showToast('Password reset email sent to ' + email + '.');
+  } catch (e) { showToast('Error: ' + e.message); }
+}
 
 async function saveAstroEdit(id) {
   const name = document.getElementById('ad-name').value.trim();
