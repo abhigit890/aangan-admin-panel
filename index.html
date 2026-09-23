@@ -1254,6 +1254,32 @@ async function unbanEntity(kind, id, name, area) {
 const SPECIALTY_OPTIONS = ['Vedic Astrology','Tarot Reading','Face Reading','Palmistry','KP Astrology','Life Coaching','Vastu Shastra','Lal Kitab','Numerology','Nadi Astrology','Prashna (Horary) Astrology','Western Astrology','Kundli Milan (Matchmaking)','Reiki Healing','Feng Shui','Gemology (Ratna Shastra)'];
 const LANGUAGE_OPTIONS = ['Hindi','English','Bengali','Marathi','Telugu','Tamil','Gujarati','Urdu','Kannada','Odia','Malayalam','Punjabi','Assamese','Bhojpuri','Rajasthani','Haryanvi'];
 
+// Ready-made "About" bios for an astrologer's profile — pick one from the dropdown
+// in the edit drawer to instantly fill the About textarea, then tweak as needed.
+const ABOUT_PRESETS = [
+  { name: 'Highly Scholarly Astrologer', text: "A highly scholarly astrologer with a deep academic grounding in Vedic Jyotish, having studied classical texts under respected gurus for many years. Known for explaining even the most complex planetary combinations in simple, easy-to-understand language. Brings a rare combination of traditional scholarship and practical, real-world guidance to every consultation." },
+  { name: 'Master Vedic Astrologer', text: "A master of traditional Vedic astrology with years of dedicated practice in horoscope analysis, dasha predictions and remedial measures. Combines ancient wisdom with a modern, empathetic approach to help you navigate life's biggest questions with clarity and confidence." },
+  { name: 'Compassionate Life Guide', text: "A warm and compassionate astrologer who listens patiently before offering guidance. Believes that every consultation should feel like a caring conversation, not just a reading — helping clients feel truly heard, understood and supported through life's ups and downs." },
+  { name: 'Celebrity & Award-Winning Astrologer', text: "An award-winning astrologer trusted by celebrities, business leaders and thousands of satisfied clients across the country. Regularly recognised for accurate predictions and has built a reputation for honesty, precision and genuinely life-changing guidance." },
+  { name: 'Tarot & Card Reading Expert', text: "A gifted tarot reader with an intuitive gift for uncovering the answers hidden within the cards. Specialises in love, career and life-path readings, offering clear and compassionate insight for anyone standing at a crossroads." },
+  { name: 'Numerology Specialist', text: "A dedicated numerology expert who believes numbers hold the key to understanding personality, destiny and timing. Helps clients choose auspicious names, dates and numbers to bring balance, luck and success into their lives." },
+  { name: 'Palmistry & Face Reading Expert', text: "An experienced palmist and face-reading expert with a sharp eye for detail, able to reveal deep insights about character, health and future possibilities simply by reading the lines of your palm and the features of your face." },
+  { name: 'Love & Relationship Expert', text: "A trusted relationship and love-life astrologer who has guided thousands of couples through compatibility questions, breakups, reconciliation and marriage timing. Known for practical, judgement-free advice on matters of the heart." },
+  { name: 'Career & Finance Astrologer', text: "A career and finance-focused astrologer who specialises in helping clients make confident decisions about jobs, business ventures and investments. Uses in-depth chart analysis to identify the most favourable timing for major financial moves." },
+  { name: 'Experienced Kundli & Horoscope Analyst', text: "An experienced horoscope analyst who prepares and studies detailed birth charts (kundlis) with great precision. Well known for spotting doshas early and suggesting simple, effective remedies well before problems arise." },
+  { name: 'Spiritual Healer & Remedies Expert', text: "A spiritual healer and remedies specialist who combines astrology with pujas, mantras and energy-healing practices. Focused on removing obstacles and negative energy from a person's life through gentle, time-tested spiritual solutions." },
+  { name: 'Vastu Shastra Consultant', text: "A Vastu Shastra consultant who helps bring harmony, positivity and prosperity into homes and workplaces. Offers practical, budget-friendly Vastu corrections rather than expensive structural changes, making ancient wisdom accessible to everyone." }
+];
+
+function applyAboutPreset(selectEl) {
+  const idx = selectEl.value;
+  if (idx === '') return;
+  const preset = ABOUT_PRESETS[Number(idx)];
+  if (!preset) return;
+  document.getElementById('ad-about').value = preset.text;
+  selectEl.value = ''; // reset back to the placeholder so it's obvious this is a one-shot fill, not a saved choice
+}
+
 function createMultiSelect(containerEl, options, selectedCsv, maxSelect) {
   maxSelect = maxSelect || 5;
   let selected = (selectedCsv || '').split(',').map(s => s.trim()).filter(Boolean);
@@ -1974,7 +2000,14 @@ function openAstroDrawer(id) {
     <div class="field"><label>Specialty</label><div class="multiselect" id="ad-specialty-ms"></div></div>
     <div class="field"><label>Languages</label><div class="multiselect" id="ad-languages-ms"></div></div>
     <div class="field"><label>Price per minute (₹)</label><input type="number" id="ad-price" value="${a.price || ''}"></div>
-    <div class="field"><label>About</label><textarea id="ad-about" rows="4">${escHtml(a.about || '')}</textarea></div>
+    <div class="field">
+      <label>About</label>
+      <select id="ad-about-preset" onchange="applyAboutPreset(this)" style="margin-bottom:8px;">
+        <option value="">— Fill from a preset —</option>
+        ${ABOUT_PRESETS.map((p, i) => `<option value="${i}">${escHtml(p.name)}</option>`).join('')}
+      </select>
+      <textarea id="ad-about" rows="4">${escHtml(a.about || '')}</textarea>
+    </div>
     <div class="field"><label>Email</label><input type="text" value="${escHtml(a.email || '')}" disabled style="opacity:0.6;"></div>
     <div style="display:flex; gap:10px; margin-top:8px;">
       <button class="btn btn-gold" style="flex:1;" onclick="saveAstroEdit('${a.id}')">Save changes</button>
